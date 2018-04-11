@@ -52,7 +52,9 @@ def makeSeqs(dir_data):
 		dir_date = dir_PV+str_date+"/"
 		for str_interaction in os.listdir(dir_date):
 			if str_interaction[0]=="S":
-				continue #Screenshot file
+				continue #Screenshot file	
+			if str_interaction[0]=="T":
+				continue #Thumbs file	
 			fn_interaction = dir_date+str_interaction
 			print(fn_interaction)
 
