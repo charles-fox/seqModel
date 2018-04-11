@@ -9,6 +9,7 @@
 
 
 import os
+import pdb
 import operator
 
 def showResults(res, dct_reverse):
@@ -69,7 +70,7 @@ def makeSeqs(dir_data):
 				fields=line.split(";")
 				if len(fields)>5:
 			#		print(fields)
-					label = fields[2]+"_"+fields[3]+"_"+fields[4]
+					label = fields[2].strip()+"_"+fields[3].strip()+"_"+fields[4].strip()   #strip fixes a data glitch, sometimes fields have spaces at end, other times not
 			#		label = fields[4]
 					
 					if fields[2]=="General Information":
@@ -84,6 +85,9 @@ def makeSeqs(dir_data):
 							id_label = dct[label]
 						else:
 							dct_count+=1
+							if dct_count == 61:
+								pdb.set_trace()
+
 							dct[label]=dct_count				
 							id_label = dct[label]
 							dct_reverse[dct_count] = label
