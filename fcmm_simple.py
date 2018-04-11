@@ -9,6 +9,7 @@ def prob_matrix():
     res = go.rankSubSeqs(seqs)    #CF simplest possible n-gram finder function 
     
     Tfreq = np.zeros((183, 183))
+    Tfreq += 1.0 #Good-Turing estimator, to avoid NaNs
     for pair in res:
         Tfreq[pair[0][0], pair[0][1]] = pair[1]
     print(Tfreq)
