@@ -9,7 +9,7 @@
 
 
 import os
-#import operator
+import operator
 
 def showResults(res, dct_reverse):
 	for r in res:
