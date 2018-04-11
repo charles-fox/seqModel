@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # -*- coding: utf-8 -*-
 """
 Created on Tue Apr 10 18:44:27 2018
@@ -15,6 +16,20 @@ def prob_matrix(size=183):
     res = rankSubSeqs(seqs)    #CF simplest possible n-gram finder function 
     
     Tfreq = np.zeros((size, size))
+=======
+import numpy as np
+import os
+import go
+
+""" Create probability matrix with sequence frequencies"""
+def prob_matrix():
+    dir_data = os.environ['ITS_SEQMODEL_DATADIR']    
+    (seqs, meta_datas, dct_reverse) = go.makeSeqs(dir_data)	
+    res = go.rankSubSeqs(seqs)    #CF simplest possible n-gram finder function 
+    
+    Tfreq = np.zeros((183, 183))
+    Tfreq += 1.0 #Good-Turing estimator, to avoid NaNs
+>>>>>>> 5d76432b81a88fcb5c34c0d95b2f84f1a565068d
     for pair in res:
         Tfreq[pair[0][0], pair[0][1]] = pair[1]
     print(Tfreq)
@@ -46,8 +61,13 @@ def add_prob(result, T):
 
 
 """ initial state of possible actions (might need some changes) """
+<<<<<<< HEAD
 def initial_state(size):
     init_state = np.ones(size)/size  
+=======
+def initial_state():
+    init_state = np.ones(181)/181  
+>>>>>>> 5d76432b81a88fcb5c34c0d95b2f84f1a565068d
     print(init_state)
     return init_state
 
@@ -73,12 +93,17 @@ def hmm_model(a,b,c, Tm, noise):
     
 if __name__=="__main__":
     
+<<<<<<< HEAD
     T, res, dct_reverse = prob_matrix(size=183)
+=======
+    T, res, dct_reverse = prob_matrix()
+>>>>>>> 5d76432b81a88fcb5c34c0d95b2f84f1a565068d
     Result = add_prob(res, T)
     #showResults(Result, dct_reverse)
     
     print("\nMarkov Model version")
     # example of possible sequence
+<<<<<<< HEAD
     #pmm = markov_model(12, 11, 13, T)
     pmm = markov_model(126, 151, 127, T)
     #print("\n")
@@ -89,3 +114,13 @@ if __name__=="__main__":
     #phmm = hmm_model(12, 11, 13, T, 0.1)
     phmm = hmm_model(126, 151, 127, T, 0.1)
     print("PROB OF " + str(dct_reverse[126]) + " AND " + str(dct_reverse[151]) + " GIVEN " + str(dct_reverse[127]) + " IS  " + str(phmm))
+=======
+    pmm = markov_model(12, 11, 13, T)
+    #print("\n")
+    print("PROB OF " + str(dct_reverse[12]) + " AND " + str(dct_reverse[11]) + " GIVEN " + str(dct_reverse[13]) + " IS  " + str(pmm))
+
+    print("\nHMM version")
+    # example of possible sequence
+    phmm = hmm_model(12, 11, 13, T, 0.1)
+    print("PROB OF " + str(dct_reverse[12]) + " AND " + str(dct_reverse[11]) + " GIVEN " + str(dct_reverse[13]) + " IS  " + str(phmm))
+>>>>>>> 5d76432b81a88fcb5c34c0d95b2f84f1a565068d
