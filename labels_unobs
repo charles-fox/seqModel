@@ -1,0 +1,9 @@
+ 10: 'Approaching Phase: Driver / Vehicle Analysis_Head Movements_Not observable',
+ 11: 'Approaching Phase: Driver / Vehicle Analysis_Hand Movements_Not observable',
+ 35: 'Approaching Phase: Pedestrian Analysis_Looking at other RUs_Not Observable',
+ 41: 'Crossing Phase: Pedestrian Analysis_Looking at other RUs_Not observable',
+ 42: 'Crossing Phase: Pedestrian Analysis_Hand Movements_Not observable',
+ 39: 'Approaching Phase: Pedestrian Analysis_Hand Movements_Not observable',
+ 82: 'Crossing Phase: Driver / Vehicle Analysis_Head Movements_Not observable',
+ 83: 'Crossing Phase: Driver / Vehicle Analysis_Hand Movements_Not observable',
+

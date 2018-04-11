@@ -8,15 +8,30 @@
 # using the data from N drive:  Interact/Observations/P-V/
 
 
-import os
+import os,sys,re
 import pdb
 import operator
 
+
+def loadNoneEvents():  #load lists of human-selected "non-events" ie those which are not real events such as Null and Unobs
+	dct_noneEvents=dict()
+	for fn in ["labels_null", "labels_unobs", "labels_desc"]:
+		for line in open(fn):
+			line=line.strip()
+			(ID, label) = re.match("(\d+): '(.*)'", line).groups()
+			ID=int(ID)
+			dct_noneEvents[label]=ID
+	return dct_noneEvents
+
 def showResults(res, dct_reverse):
+	i=0
 	for r in res:
 		(subseq, count) = r
 		subseq_human = subseq2human(subseq, dct_reverse)
 		print(subseq_human, count)
+		i+=1
+		if i>10:   #limit to top 10
+			break
 
 def subseq2human(subseq, dct_reverse):
 	str_out = ""
@@ -25,24 +40,25 @@ def subseq2human(subseq, dct_reverse):
 		str_out = str_out+label+" , "
 	return str_out
 
-def rankSubSeqs(seqs):
+def rankSubSeqs(seqs, ngram):
 	dct_hyps = dict()     #my best hypotheses about populat sequences. the subseq is the key. the number of times it is seen is stored.
-	for subSeqLength in range(4,5):   #length of subseqs to look for
-		
-		for seq in seqs:   #analyse a sequence
-			for t in range(0,  len(seq)-subSeqLength):
-				subseq = tuple(seq[t:t+subSeqLength])    #tuple is needed for dict hashing
+	subSeqLength = ngram   #length of subseqs to look for (EDIT THIS)
+	
+	for seq in seqs:   #analyse a sequence
+		for t in range(0,  len(seq)-subSeqLength):
+			subseq = tuple(seq[t:t+subSeqLength])    #tuple is needed for dict hashing
 
-				if subseq in dct_hyps:
-					dct_hyps[subseq] = dct_hyps[subseq] + 1
-				else:
-					dct_hyps[subseq] = 1
+			if subseq in dct_hyps:
+				dct_hyps[subseq] = dct_hyps[subseq] + 1
+			else:
+				dct_hyps[subseq] = 1   #create hypothesis
 
 	res = sorted(dct_hyps.items(), key=operator.itemgetter(1))
+	res.reverse()
 	return res
 
 
-def makeSeqs(dir_data):
+def makeSeqs(dir_data, dct_noneEvents=dict()):
 	dir_PV = dir_data+"P-V/"
 	dct_count=-1
 	dct=dict()
@@ -57,7 +73,7 @@ def makeSeqs(dir_data):
 			if str_interaction[0]=="T":
 				continue #Thumbs file	
 			fn_interaction = dir_date+str_interaction
-			print(fn_interaction)
+			#print(fn_interaction)
 
 			seq = []
 			meta_data = []
@@ -79,6 +95,10 @@ def makeSeqs(dir_data):
 					elif fields[2]=="Graphic":
 		#				print("GRAPHIC")
 						foo=1
+
+					#TODO test if its a descriptor or an event. If descriptor, just ignore for now.
+					elif label in dct_noneEvents:
+						pass #print("nonevent")
 					else:
 						#have we seen this label before?
 						if label in dct:
@@ -97,15 +117,18 @@ def makeSeqs(dir_data):
 
 if __name__=="__main__":
 
+	dct_noneEvents = loadNoneEvents()
+
 	dir_data = os.environ['ITS_SEQMODEL_DATADIR']
-	#eg. export ITS_SEQMODEL_DATADIR=/home/user/data/oscarPedestrians/
+	#eg in ~/.bashrc: export ITS_SEQMODEL_DATADIR=/home/user/data/oscarPedestrians/
 
-	(seqs,meta_datas, dct_reverse) = makeSeqs(dir_data)	
-	print(meta_datas)
-	print(seqs)                    #use seqs to call your own analysis functions to look for patterns !
+	(seqs,meta_datas, dct_reverse) = makeSeqs(dir_data, dct_noneEvents)	
+	#print(meta_datas)
+	#print(seqs)                    #use seqs to call your own analysis functions to look for patterns !
 
-	res = rankSubSeqs(seqs)    #CF simplest possible n-gram finder function 
-	#print(res)
-	
-	showResults(res, dct_reverse)
+	for ngram in range(2,5):
+		print("TOP %i-grams:  (frequency) "%ngram)
+		res = rankSubSeqs(seqs, ngram)    #CF simplest possible n-gram finder function 
+		showResults(res, dct_reverse)
+		print("")
 			
