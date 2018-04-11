@@ -1,13 +1,13 @@
-from go import *
 import numpy as np
+import go
 
 """ Create probability matrix with sequence frequencies"""
 def prob_matrix():
-    
-    (seqs, meta_datas, dct_reverse, file_counter) = makeSeqs(dir_data)	
+    dir_data = os.environ['ITS_SEQMODEL_DATADIR']    
+    (seqs, meta_datas, dct_reverse) = go.makeSeqs(dir_data)	
     res = rankSubSeqs(seqs)    #CF simplest possible n-gram finder function 
     
-    Tfreq = np.zeros((181, 181))
+    Tfreq = np.zeros((183, 183))
     for pair in res:
         Tfreq[pair[0][0], pair[0][1]] = pair[1]
     print(Tfreq)
