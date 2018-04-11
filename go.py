@@ -85,8 +85,6 @@ def makeSeqs(dir_data):
 							id_label = dct[label]
 						else:
 							dct_count+=1
-							if dct_count == 61:
-								pdb.set_trace()
 
 							dct[label]=dct_count				
 							id_label = dct[label]
