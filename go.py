@@ -1,4 +1,3 @@
-dir_data = "/home/charles/data/oscarPedestrians/"   #change this to your own machine's data path
 
 #CF 2018-02-12
 #code to load the raw CSV questionaaires into python
@@ -93,6 +92,10 @@ def makeSeqs(dir_data):
 	return (seqs, meta_datas, dct_reverse)
 
 if __name__=="__main__":
+
+	dir_data = os.environ['ITS_SEQMODEL_DATADIR']
+	#eg. export ITS_SEQMODEL_DATADIR=/home/user/data/oscarPedestrians/
+
 	(seqs,meta_datas, dct_reverse) = makeSeqs(dir_data)	
 	print(meta_datas)
 	print(seqs)                    #use seqs to call your own analysis functions to look for patterns !
