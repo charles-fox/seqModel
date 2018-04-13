@@ -64,7 +64,7 @@ def makeSeqs(dir_data, dct_noneEvents=dict()):
 	dct=dict()
 	dct_reverse=dict()
 	seqs = []   #pronounced "seeks" for sequences
-	meta_datas = []
+	descriptorss = []    #CF I use sufix "ss" to mean a list of lists. (ie list of many descriptor lists, for all interactions)
 	for str_date in os.listdir(dir_PV):
 		dir_date = dir_PV+str_date+"/"
 		for str_interaction in os.listdir(dir_date):
@@ -76,7 +76,7 @@ def makeSeqs(dir_data, dct_noneEvents=dict()):
 			#print(fn_interaction)
 
 			seq = []
-			meta_data = []
+			descriptors = []   #list of all descriptors of one interaction.
 			for line in open(fn_interaction):
 				line=line.strip()
 				if len(line)<1:
@@ -89,16 +89,15 @@ def makeSeqs(dir_data, dct_noneEvents=dict()):
 					label = fields[2].strip()+"_"+fields[3].strip()+"_"+fields[4].strip()   #strip fixes a data glitch, sometimes fields have spaces at end, other times not
 			#		label = fields[4]
 					
-					if fields[2]=="General Information":
-		#				print("GI")
-						meta_data.append(label)
+					if fields[2]=="General Information":  #these are all descriptors, not events
+						descriptors.append(label)
 					elif fields[2]=="Graphic":
 		#				print("GRAPHIC")
 						foo=1
 
-					#TODO test if its a descriptor or an event. If descriptor, just ignore for now.
+					#test if its a descriptor or an event.  (not all descriptors are "General Information").
 					elif label in dct_noneEvents:
-						pass #print("nonevent")
+						descriptors.append(label)
 					else:
 						#have we seen this label before?
 						if label in dct:
@@ -112,8 +111,8 @@ def makeSeqs(dir_data, dct_noneEvents=dict()):
 
 						seq.append(id_label)
 			seqs.append(seq)
-			meta_datas.append(meta_data)
-	return (seqs, meta_datas, dct_reverse)
+			descriptorss.append(descriptors) 
+	return (seqs, descriptorss, dct_reverse)
 
 if __name__=="__main__":
 
@@ -122,9 +121,7 @@ if __name__=="__main__":
 	dir_data = os.environ['ITS_SEQMODEL_DATADIR']
 	#eg in ~/.bashrc: export ITS_SEQMODEL_DATADIR=/home/user/data/oscarPedestrians/
 
-	(seqs,meta_datas, dct_reverse) = makeSeqs(dir_data, dct_noneEvents)	
-	#print(meta_datas)
-	#print(seqs)                    #use seqs to call your own analysis functions to look for patterns !
+	(seqs,descriptorss, dct_reverse) = makeSeqs(dir_data, dct_noneEvents)	
 
 	for ngram in range(2,5):
 		print("TOP %i-grams:  (frequency) "%ngram)
