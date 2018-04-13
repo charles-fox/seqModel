@@ -1,6 +1,3 @@
-{0: 'Approaching Phase: Driver / Vehicle Analysis_Interacting vehicle_Car',
- 1: 'Approaching Phase: Driver / Vehicle Analysis_Vehicle approached from_From right',
- 2: 'Approaching Phase: Driver / Vehicle Analysis_Vehicle approached from_Single',
  3: 'Approaching Phase: Driver / Vehicle Analysis_Vehicle Movement_Decelerated due to traffic',
  4: 'Approaching Phase: Driver / Vehicle Analysis_Used signals_Turn Indicator',
  5: 'Approaching Phase: Pedestrian Analysis_Movements while Approaching_Slowed down',
