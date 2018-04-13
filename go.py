@@ -145,5 +145,11 @@ if __name__=="__main__":
 
 	winners = findWinners(seqs, descriptorss, dct_reverse)  
 
-	#TODO convert all the input features to a matrix of booleans, including all descriptors, presence/absence of sequence members, and presence/absence of motifs
+	#convert presence/absennce of temporal events to features (to use as inputs to machine learning)
+	INPUTS = np.zeros(( len(seqs) , 100 ))
+	for i in range(0, len(seqs)):
+		INPUTS[i, seqs[i]] = 1
+	#TODO add presence/absence of descriptors to INPUTS
+	#TODO add presence/absence of motifs to INPUTS
+
 	#TODO do machine learning (eg regression) to predict the winners from the input feature matrix
