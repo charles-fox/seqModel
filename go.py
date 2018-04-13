@@ -10,8 +10,9 @@
 
 import os,sys,re
 import pdb
+import numpy as np
 import operator
-
+import findWinner
 
 def loadNoneEvents():  #load lists of human-selected "non-events" ie those which are not real events such as Null and Unobs
 	dct_noneEvents=dict()
@@ -114,6 +115,18 @@ def makeSeqs(dir_data, dct_noneEvents=dict()):
 			descriptorss.append(descriptors) 
 	return (seqs, descriptorss, dct_reverse)
 
+
+def findWinners(seqs, descriptorss, dct_reverse):
+	N = len(seqs)  #now many interactions observed
+	winners = np.zeros((N))
+	for i in range(0,N):
+		seq_human_readable = subseq2human(seqs[i], dct_reverse)
+		descriptors_human_readable = descriptorss[i]
+		winner = findWinner.findWinner(seq_human_readable, descriptors_human_readable)  
+		winners[i]=winner
+	return winners
+
+
 if __name__=="__main__":
 
 	dct_noneEvents = loadNoneEvents()
@@ -129,3 +142,8 @@ if __name__=="__main__":
 		showResults(res, dct_reverse)
 		print("")
 			
+
+	winners = findWinners(seqs, descriptorss, dct_reverse)  
+
+	#TODO convert all the input features to a matrix of booleans, including all descriptors, presence/absence of sequence members, and presence/absence of motifs
+	#TODO do machine learning (eg regression) to predict the winners from the input feature matrix
