@@ -17,7 +17,8 @@ def findWinner(seq_human_readable, descriptors_human_readable):
     
     elif(seq_human_readable.find("Crossing Phase: Pedestrian Analysis_Hand Movements_Waved Hand") > 0 or \
          seq_human_readable.find("Approaching Phase: Driver / Vehicle Analysis_Vehicle Movement_Decelerated due to other pedestrians") > 0 or \
-         seq_human_readable.find("Approaching Phase: Driver / Vehicle Analysis_Vehicle Movement_Stopped due to other pedestrian") > 0):
+         seq_human_readable.find("Approaching Phase: Driver / Vehicle Analysis_Vehicle Movement_Stopped due to other pedestrian") > 0 or \
+         seq_human_readable.find("Approaching Phase: Driver / Vehicle Analysis_Vehicle Movement_Stopped for observed pedestrian") > 0 ):
         winner = 1
         
     elif(seq_human_readable.find("Pedestrian") > 0 and seq_human_readable.find("Vehicle") < 0):
