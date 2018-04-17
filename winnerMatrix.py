@@ -8,11 +8,11 @@ Created on Sat Apr 14 10:59:40 2018
 
 def winnerMatrix(size):
     winmatrix = np.zeros([size])
-    winmatrix[0] = 0
-    winmatrix[1] = 0
-    winmatrix[2] = 0
-    winmatrix[3] = 0
-    winmatrix[4] = 1 # no vehicle mentioned
+    winmatrix[0] = 0 # 1 female, young adult, overcast
+    winmatrix[1] = 0 # 1 male, 1 female, young adult, overcast
+    winmatrix[2] = 0 # 1 female, midage adult, overcast
+    winmatrix[3] = 0 # 1 male, 1 female, young adults, overcast
+    winmatrix[4] = 1 # 1 female, yong adult, sunny, no vehicle mentioned
     winmatrix[5] = 0  # 1 female, young adult, distraction: headphone
     winmatrix[6] = 0 # 1 male, young adult, wait to cross with other pedestrians
     winmatrix[7] = 0 # 2 males, young adults, stopped for vehicle
@@ -109,7 +109,111 @@ def winnerMatrix(size):
     winmatrix[97] = 0 # 2 females, young adults, overcast
     winmatrix[98] = 0 # 2 females, young adults, part of a bigger group, overcast
     winmatrix[99] = 0 # 1 male, young adult, distraction: mobile phone, headphones, overcast
-    winmatrix[100] = 0 # 1 male, young adult, distraction: headphones, overcast
+    winmatrix[100] = 0 # 1 male, young adult, distraction: headphones, overcast)
+    
+    winmatrix[101] = 0 # 2 males, young adults, overcast  
+    winmatrix[102] = 1 # 1 male, young adult, overcast
+    winmatrix[103] = 0 # 1 female, young adult
+    winmatrix[104] = 1 # 1 male, midage adult, overcast
+    winmatrix[105] = 0 # 1 male, young adult, distraction: headphones, overcast
+    winmatrix[106] = 0 # 2 females, young adults, overcast
+    winmatrix[107] = 1 # 1 female, young adult, distraction: headphones, overcast, pedestrian jumped a bit, she was surprised by the car
+    winmatrix[108] = 0 # 1 female, young adult, distraction: headphones, overcast, V2 is a parked car
+    winmatrix[109] = 0 # 1 male, young adult, distraction: headphones, overcast
+    winmatrix[110] = 0 # 1 female, young adult, overcast
+    winmatrix[111] = 0 # 2 males, young adults, overcast
+    winmatrix[112] = 0 # 1 female, young adult, distraction: headphones, overcast
+    winmatrix[113] = 1 # 1 male, 4 females, young adults, group people talking to each other, not looking at thte vehicle, overcast
+    winmatrix[114] = 1 # midage adult, distraction: headphones, overcast
+    winmatrix[115] = 0 # 1 male, 1 female, young audlts, group crosses far down the road, overcast 
+    winmatrix[116] = 0 # 1 male, teenager, distraction: headphones, overcast
+    winmatrix[117] = 0 # 1 male, young adult, distraction: headpones, overcast
+    winmatrix[118] = 1 # 1 female, young adult, overcast
+    winmatrix[119] = 1 # 1 female, young adult, distraction: headphones, overcast
+    winmatrix[120] = 0 # 2 females, young adults, overcast
+    winmatrix[121] = 0 # 2 males, 2 females, young adults, overcast
+    winmatrix[122] = 0 # 1 male, young adult, had crutches, overcast
+    winmatrix[123] = 0 # 1 male, young adult, distraction: looking and talking to mobile phone, overcast
+    winmatrix[124] = 0 # 1 male, young adult, overcast
+    winmatrix[125] = 0 # 1 male, young adult, distraction: headphones, overcast
+    winmatrix[126] = 1 # 1 male, young adult, overcast
+    winmatrix[127] = 0 # 1 female, young adults, overcast, 2 vehicles passed simultaneously 
+    winmatrix[128] = 1 # 1 female, young adult, overcast, didn't look at the road, no vehicle mentioned
+    winmatrix[129] = 0 # 1 female, young adult, overcast, had to stop for 2 vehicles to pass her
+    winmatrix[130] = 1 # 1 male, young adult, distraction: headphones, overcast
+    winmatrix[131] = 1 # 1 female, young adult, overcast, 2 vehicles stopped for her
+    winmatrix[132] = 1 # 2 males, midage adults, overcast, no vehicle mentioned
+    winmatrix[133] = 0 # 1 female, young adult, overcast, 2 vehicles passed her
+    winmatrix[134] = 0 # 1 male, 1 female, yung adults, overcast, pedestrians went behind the car
+    winmatrix[135] = 0 # 2 femakes, young adults, sunny, one of the girls did a hand movement to the other to make her slow down
+    winmatrix[136] = 0 # 1 female, young adult, distraction: headphones, overcast
+    winmatrix[137] = 1 # 1 male, midage adult, no vehicle mentioned
+    winmatrix[138] = 1 # 1 female, young adult, no vehicle mentioned
+    winmatrix[139] = 0 # 1 male, young adult, sunny, distraction: mobile phone, 2 vehicles passed the pedestrian 
+    winmatrix[140] = 0 # 2 males, young adults, overcast
+    winmatrix[141] = 1 # 1 male, young adult, distraction: mobile phone, overcast
+    winmatrix[142] = 1 # 1 male, 1 female, young adults, overcast
+    winmatrix[143] = 0 # 1 male, young adult, overcast, distraction: headphones
+    winmatrix[144] = 0 # 3 males, 1 female, overcast, vehicle just parked and pedestrians crossed in front and behinf it
+    winmatrix[145] = 1 # 1 male, young adult, overcast 
+    winmatrix[146] = 1 # 1 female, young adult, sunny, distraction: mobile phone
+    winmatrix[147] = 0 # no info
+    winmatrix[148] = 0 # 1 male, young adult, distraction: mobile phone, sunny, 2 vehicles passed the pedestrian
+    winmatrix[149] = 1 # 1 female, young adult, distraction: headphones, first stopped in the middle of the road then crossed, overcast
+    winmatrix[150] = 1 # 1 female, young adult, distraction: mobile phone and headphones, didn't see the vehicle, raining 
+    winmatrix[151] = 1 #  3 females, teenagers, V1 passed and parked, V2 decelrated for pedestrians, raining
+    winmatrix[152] = 1 # 1 male, 3 females, teenagers, raining, didn't look at the vehicle
+    winmatrix[153] = 0 # 1 female, young adult, overcast
+    winmatrix[154] = 0 # 1 female, midage adult, overcast
+    winmatrix[155] = 1 # 1 female, young adult, distraction: mobile phone, overcast
+    winmatrix[156] = 1 # 2 females, young adults, overcast, no vehicle mentioned
+    winmatrix[157] = 0 # 2 females, young adults, overcast
+    winmatrix[158] = 0 # 1 male, midage adult, overcast
+    winmatrix[159] = 1 # no info
+    winmatrix[160] = 1 # 1 male, young adult, distraction: headphones, overcast
+    winmatrix[161] = 0 # 1 male, young adult, distraction: headphones, overcast
+    winmatrix[162] = 1 # 1 female, young adult, overcast, no vehicle mentioned
+    winmatrix[163] = 0 # 1 male, young adult, overcast
+    winmatrix[164] = 1 # 1 female, midage adult, overcast
+    winmatrix[165] = 0 # 1 male, 1 female, distraction: talking toeach other
+    winmatrix[166] = 1 # male, young adult, distraction: headphones, no vehicle mentioned, overcast
+    winmatrix[167] = 1 # no info but no vehicle mentioned in the sequence
+    winmatrix[168] = 1 # 1 male, young adult, following a group of people, no vehicle mentioned, overcast
+    winmatrix[169] = 1 # 1 male, young adult, overcast
+    winmatrix[170] = 1 # 1 female, midage adult, overcast,  no vehicle mentioned
+    winmatrix[171] = 0 # 1 male, midage adult, overcast
+    winmatrix[172] = 0 # 1 male, midage adult, overcast
+    winmatrix[173] = 1 # 1 male, young adult, overcast
+    winmatrix[174] = 1 # 1 male, young adult, overcast 
+    winmatrix[175] = 1 # 2 femalesm young adults, overcast, slightly slowed down
+    winmatrix[176] = 1 # 1 male, young adult, distraction: headphones, overcast
+    winmatrix[177] = 1 # 1 female, young adult, overcast 
+    winmatrix[178] = 1 # 1 female, young adult, distraction: mobile phone, overcast, no vehcile mentioned
+    winmatrix[179] = 0 # 2 males, young adults, overcast
+    winmatrix[180] = 1 # 2 females, young adults, overcast, no vehicle mentioned
+    winmatrix[181] = 0 # 2 males, young adults, overcast
+    winmatrix[182] = 1 # 1 female, young adult, overcast, no vehicle mentioned
+    winmatrix[183] = 1 # 1 female, young adult, overcast, distraction: mobile phone + headphones, no vehicle mentioned
+    winmatrix[184] = 1 # 1 old adult, no vehicle mentioned
+    winmatrix[185] = 1 # heavy traffic
+    winmatrix[186] = 0 # 1 female, young adult, overcast
+    winmatrix[187] = 1 # 1 male, overcast, distraction: mobile, headphones, no vehicle mentioned
+    winmatrix[188] = 1 # 1 male, distraction: mobile phone + headphones, no vehicle mentioned, overcast
+    winmatrix[189] = 0 # 1 female, young adult, overcast
+    winmatrix[190] = 0 # 1 male, young adult, sunny
+    winmatrix[191] = 0 # 1 male, 2 females, sunny
+    winmatrix[192] = 0 # 2 females, young adults, sunny
+    winmatrix[193] = 0 # 1 female, young adult, sunny
+    winmatrix[194] = 1 # 2 males, young adults, overcast
+    winmatrix[195] = 1 # 1 female, old adult, sunny
+    winmatrix[196] = 0 # 2 males, young audlts, overcast
+    winmatrix[197] = 0 # 2 females, young adults, sunny
+    winmatrix[198] = -1 # empty data
+    winmatrix[199] = 0 # 2 males, midage adults, sunny
+    winmatrix[200] = 0 # no info, pedestrian slowed down
+    winmatrix[201] = 0 # 1 female, young adult, distraction: mobile phone, headphones, sunny
+    winmatrix[202] = 1 # 2 males, young adults, were first on the road before the vehicle comes, sunny
+    winmatrix[203] = 0 # 1 male, 1 female, teenagers, sunny 
     
     
     return winmatrix
@@ -117,5 +221,5 @@ def winnerMatrix(size):
     
 if __name__=="__main__":
     
-    win = winnerMatrix(101)
+    win = winnerMatrix(204)
     print(win)
