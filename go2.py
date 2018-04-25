@@ -22,6 +22,17 @@ import operator
 import findWinner
 from fcmotif import findMotif
 
+from sklearn.feature_selection import RFE
+from sklearn import preprocessing
+from sklearn.linear_model import LogisticRegression
+from sklearn.cross_validation import train_test_split
+
+from numpy import loadtxt, where
+from pylab import scatter, show, legend, xlabel, ylabel
+
+import matplotlib.pyplot as plt
+
+
 def loadNoneEvents():  #load lists of human-selected "non-events" ie those which are not real events such as Null and Unobs
 	dct_noneEvents=dict()
 	for fn in ["labels_null", "labels_unobs", "labels_desc"]:
@@ -202,4 +213,30 @@ if __name__=="__main__":
 				inputs[i, 78 + 10*j + k] = findMotif(seqs[i], list(motifs[j][k][0]))
 
 	#TODO do machine learning (eg logit regression) to predict the winners from the input feature matrix
+
+	plt.figure()	
+	#plt.logistic()
+	plt.plot(winners, inputs)
+
+	logreg = LogisticRegression()
+	
+	rfe = RFE(logreg, 18)
+	rfe = rfe.fit(inputs, winners)
+	print(rfe.support_)
+	print(rfe.ranking_)
+	
+	# creating testing and training set
+	X_train,X_test,Y_train,Y_test = train_test_split(inputs,winners,test_size=0.33)
+	
+	# train scikit learn model 
+	clf = LogisticRegression()
+	clf.fit(X_train,Y_train)
+	print('score Scikit learn: ', clf.score(X_test,Y_test))
+
+	logistic = LogisticRegression()
+	logistic.fit(inputs,winners)
+	predicted = logistic.predict(X_test)
+	print("Predicted " + str(predicted))
+	plt.figure()
+	plt.plot(predicted)
 	
