@@ -32,6 +32,10 @@ from pylab import scatter, show, legend, xlabel, ylabel
 
 import matplotlib.pyplot as plt
 
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn import metrics
+
 
 def loadNoneEvents():  #load lists of human-selected "non-events" ie those which are not real events such as Null and Unobs
 	dct_noneEvents=dict()
@@ -231,7 +235,8 @@ if __name__=="__main__":
 	# train scikit learn model 
 	clf = LogisticRegression()
 	clf.fit(X_train,Y_train)
-	print('score Scikit learn: ', clf.score(X_test,Y_test))
+	score = round(clf.score(X_test,Y_test), 2)
+	print('score Scikit learn: ', score)
 
 	logistic = LogisticRegression()
 	logistic.fit(inputs,winners)
@@ -240,3 +245,15 @@ if __name__=="__main__":
 	plt.figure()
 	plt.plot(predicted)
 	
+	# metrics
+	cm = metrics.confusion_matrix(Y_test, predicted)
+	print(cm)
+	
+	
+	plt.figure(figsize=(2,2))
+	sns.heatmap(cm, annot=True, fmt=".3f", linewidths=.5, square = True, cmap = 'Blues_r');
+	plt.ylabel('Actual label');
+	plt.xlabel('Predicted label');
+	all_sample_title = 'Accuracy Score: {0}'.format(score)
+	plt.title(all_sample_title, size = 15)
+	plt.show()
