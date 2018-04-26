@@ -26,7 +26,6 @@
  38: 'Crossing Phase: Pedestrian Analysis_Hand Movements_Raised hand in front',
  40: 'Approaching Phase: Pedestrian Analysis_Movements while Approaching_Stopped at the edge of the pavement',
  43: 'Approaching Phase: Driver / Vehicle Analysis_Vehicle Movement_Kept pace',
- 46: 'Crossing Phase: Pedestrian Analysis_Head Movements_None / Facing forward',
  47: 'Approaching Phase: Driver / Vehicle Analysis_Head Movements_Turned in the direction of pedestrian',
  48: 'Approaching Phase: Driver / Vehicle Analysis_Vehicle Movement_Other (elaborate in notes)',
  49: 'Crossing Phase: Pedestrian Analysis_Movements while crossing_Other (elaborate in notes)',

@@ -6,6 +6,7 @@
  33: 'Approaching Phase: Driver / Vehicle Analysis_Interacting vehicle_None',
  34: 'Crossing Phase: Pedestrian Analysis_Looking at other RUs_None',
  44: 'Approaching Phase: Driver / Vehicle Analysis_Head Movements_None',
+ 46: 'Crossing Phase: Pedestrian Analysis_Head Movements_None / Facing forward',
  45: 'Approaching Phase: Driver / Vehicle Analysis_Hand Movements_None',
  73: 'Crossing Phase: Driver / Vehicle Analysis_Used signals_None',
  75: 'Crossing Phase: Driver / Vehicle Analysis_Hand Movements_None',
