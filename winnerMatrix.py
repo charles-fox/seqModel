@@ -5,6 +5,7 @@ Created on Sat Apr 14 10:59:40 2018
 @author: fanta
 """
 
+import numpy as np
 
 def winnerMatrix(size):
     winmatrix = np.zeros([size])
@@ -145,7 +146,7 @@ def winnerMatrix(size):
     winmatrix[132] = 1 # 2 males, midage adults, overcast, no vehicle mentioned
     winmatrix[133] = 0 # 1 female, young adult, overcast, 2 vehicles passed her
     winmatrix[134] = 0 # 1 male, 1 female, yung adults, overcast, pedestrians went behind the car
-    winmatrix[135] = 0 # 2 femakes, young adults, sunny, one of the girls did a hand movement to the other to make her slow down
+    winmatrix[135] = 0 # 2 females, young adults, sunny, one of the girls did a hand movement to the other to make her slow down
     winmatrix[136] = 0 # 1 female, young adult, distraction: headphones, overcast
     winmatrix[137] = 1 # 1 male, midage adult, no vehicle mentioned
     winmatrix[138] = 1 # 1 female, young adult, no vehicle mentioned
@@ -185,7 +186,7 @@ def winnerMatrix(size):
     winmatrix[172] = 0 # 1 male, midage adult, overcast
     winmatrix[173] = 1 # 1 male, young adult, overcast
     winmatrix[174] = 1 # 1 male, young adult, overcast 
-    winmatrix[175] = 1 # 2 femalesm young adults, overcast, slightly slowed down
+    winmatrix[175] = 1 # 2 females, young adults, overcast, slightly slowed down
     winmatrix[176] = 1 # 1 male, young adult, distraction: headphones, overcast
     winmatrix[177] = 1 # 1 female, young adult, overcast 
     winmatrix[178] = 1 # 1 female, young adult, distraction: mobile phone, overcast, no vehcile mentioned
@@ -208,7 +209,7 @@ def winnerMatrix(size):
     winmatrix[195] = 1 # 1 female, old adult, sunny
     winmatrix[196] = 0 # 2 males, young audlts, overcast
     winmatrix[197] = 0 # 2 females, young adults, sunny
-    winmatrix[198] = -1 # empty data
+    winmatrix[198] = 1 # empty data
     winmatrix[199] = 0 # 2 males, midage adults, sunny
     winmatrix[200] = 0 # no info, pedestrian slowed down
     winmatrix[201] = 0 # 1 female, young adult, distraction: mobile phone, headphones, sunny
