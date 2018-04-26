@@ -234,35 +234,94 @@ def plotData(data):
 	sns.countplot(x="Winner", data=data, palette='hls')
 	plt.show()
 	
-	pd.crosstab(data['Action 2'], data['Winner']).plot(kind='bar')
-	plt.title('Action 2 vs winner')
-	plt.xlabel('Action 2')
+	pd.crosstab(data['Action 1'], data['Winner']).plot(kind='bar')
+	plt.title('Action 1 vs winner')
+	plt.xlabel('Action 1: Trun Indicator')
 	plt.ylabel('winner')
 	
+	pd.crosstab(data['Action 7'], data['Winner']).plot(kind='bar')
+	plt.title('Action 7 vs winner')
+	plt.xlabel('Action 7: Pedestrian looked at vehicle')
+	plt.ylabel('winner')	
+
 	pd.crosstab(data['Action 9'], data['Winner']).plot(kind='bar')
 	plt.title('Action 9 vs winner')
-	plt.xlabel('Action 9')
+	plt.xlabel('Action 9: Vehicle passed Ped (approaching)')
 	plt.ylabel('winner')
-
 
 	pd.crosstab(data['Action 10'], data['Winner']).plot(kind='bar')
 	plt.title('Action 10 vs winner')
-	plt.xlabel('Action 10')
-	plt.ylabel('winner')
-
-	pd.crosstab(data['Action 11'], data['Winner']).plot(kind='bar')
-	plt.title('Action 11 vs winner')
-	plt.xlabel('Action 11')
+	plt.xlabel('Action 10: Pedestrian initiated crossing')
 	plt.ylabel('winner')
 
 	pd.crosstab(data['Action 12'], data['Winner']).plot(kind='bar')
 	plt.title('Action 12 vs winner')
-	plt.xlabel('Action 12')
+	plt.xlabel('Action 12: Vehicle decelerated due to traffic')
+	plt.ylabel('winner')
+	
+	pd.crosstab(data['Action 17'], data['Winner']).plot(kind='bar')
+	plt.title('Action 17 vs winner')
+	plt.xlabel('Action 17: Pedestrian mvt while crossing (notes)')
+	plt.ylabel('winner')
+	
+	pd.crosstab(data['Action 27'], data['Winner']).plot(kind='bar')
+	plt.title('Action 27 vs winner')
+	plt.xlabel('Action 27: Pedestrian slowed down/stopped')
+	plt.ylabel('winner')
+	
+	pd.crosstab(data['Action 29'], data['Winner']).plot(kind='bar')
+	plt.title('Action 29 vs winner')
+	plt.xlabel('Action 29: Pedestrian speeded up while crossing')
+	plt.ylabel('winner')
+	
+	pd.crosstab(data['Action 31'], data['Winner']).plot(kind='bar')
+	plt.title('Action 31 vs winner')
+	plt.xlabel('Action 31: Pedestrian looked at other RUs')
+	plt.ylabel('winner')
+	
+	pd.crosstab(data['Action 36'], data['Winner']).plot(kind='bar')
+	plt.title('Action 36 vs winner')
+	plt.xlabel('Action 36: Pedestrian raised hand sidewards')
 	plt.ylabel('winner')
 
-	pd.crosstab(data['2gram 1'], data['Winner']).plot(kind='bar')
-	plt.title('2 gram 1 vs winner')
-	plt.xlabel('2gram 1')
+	pd.crosstab(data['Action 40'], data['Winner']).plot(kind='bar')
+	plt.title('Action 40 vs winner')
+	plt.xlabel('Action 40: Vehicle passed pedestrian (crossing)')
+	plt.ylabel('winner')
+	
+	pd.crosstab(data['Action 43'], data['Winner']).plot(kind='bar')
+	plt.title('Action 43 vs winner')
+	plt.xlabel('Action 43: Driver hand mvt turned in direction of pedestrian')
+	plt.ylabel('winner')
+
+	pd.crosstab(data['Action 47'], data['Winner']).plot(kind='bar')
+	plt.title('Action 47 vs winner')
+	plt.xlabel('Action: Vehicle stopped for pedestrian')
+	plt.ylabel('winner')
+	
+	pd.crosstab(data['Action 50'], data['Winner']).plot(kind='bar')
+	plt.title('Action 50 vs winner')
+	plt.xlabel('Action 50: Vehicle decelerated due to observed Pedestrian')
+	plt.ylabel('winner')
+	
+	pd.crosstab(data['2gram 4'], data['Winner']).plot(kind='bar')
+	plt.title('2gram 4 vs winner')
+	plt.xlabel('2gram 4')
+	plt.ylabel('winner')
+	
+	pd.crosstab(data['2gram 6'], data['Winner']).plot(kind='bar')
+	plt.title('2 gram 6 vs winner')
+	plt.xlabel('2gram 6')
+	plt.ylabel('winner')	
+	
+	pd.crosstab(data['2gram 8'], data['Winner']).plot(kind='bar')
+	plt.title('2 gram 8 vs winner')
+	plt.xlabel('2gram 8')
+	plt.ylabel('winner')	
+	
+	pd.crosstab(data['2gram 9'], data['Winner']).plot(kind='bar')
+	plt.title('2 gram 9 vs winner')
+	plt.xlabel('2gram 9')
 	plt.ylabel('winner')	
 	
 	pd.crosstab(data['Gender'], data['Winner']).plot(kind='bar')
@@ -336,7 +395,7 @@ def logitRegression(data):
 	print("\nFeature index: " + str(np.where(features == True)))
 
 	# train with selected features
-	train_cols = ['Action 2', 'Action 8', 'Action 10', 'Action 11', 'Action 13', 'Action 18', 'Action 28', 'Action 30', 'Action 32', 'Action 37', 'Action 41', 'Action 44', 'Action 48', 'Action 51', '2gram 4', '2gram 6', '3gram 8', '2gram 9']
+	train_cols = ['Action 1', 'Action 7', 'Action 9', 'Action 10', 'Action 12', 'Action 17', 'Action 27', 'Action 29', 'Action 31', 'Action 36', 'Action 40', 'Action 43', 'Action 47', 'Action 50', '2gram 4', '2gram 6', '2gram 8', '2gram 9']
 	X = data[train_cols]	
 	#print(X)
 	y = data['Winner']
