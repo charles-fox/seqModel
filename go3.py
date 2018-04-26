@@ -281,19 +281,9 @@ def plotData(data):
 	plt.xlabel('Action 31: Pedestrian looked at other RUs')
 	plt.ylabel('winner')
 
-	pd.crosstab(data['Action 40'], data['Winner']).plot(kind='bar')
-	plt.title('Action 40 vs winner')
-	plt.xlabel('Action 40: Vehicle passed pedestrian (crossing)')
-	plt.ylabel('winner')
-	
 	pd.crosstab(data['Action 43'], data['Winner']).plot(kind='bar')
 	plt.title('Action 43 vs winner')
 	plt.xlabel('Action 43: Driver hand mvt turned in direction of pedestrian')
-	plt.ylabel('winner')
-
-	pd.crosstab(data['Action 47'], data['Winner']).plot(kind='bar')
-	plt.title('Action 47 vs winner')
-	plt.xlabel('Action: Vehicle stopped for pedestrian')
 	plt.ylabel('winner')
 	
 	pd.crosstab(data['Action 50'], data['Winner']).plot(kind='bar')
