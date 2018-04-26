@@ -19,7 +19,6 @@
  26: 'Approaching Phase: Driver / Vehicle Analysis_Vehicle Movement_Stopped for observed pedestrian',
  27: 'Approaching Phase: Driver / Vehicle Analysis_Vehicle approached from_Multiple',
  28: 'Approaching Phase: Driver / Vehicle Analysis_Vehicle Movement_Stopped due to traffic',
- 29: 'Approaching Phase: Pedestrian Analysis_Head Movements_None / Facing forward',
  31: 'Approaching Phase: Driver / Vehicle Analysis_Vehicle Movement_Accelerated',
  32: 'Approaching Phase: Driver / Vehicle Analysis_Vehicle Movement_Turned right',
  36: 'Approaching Phase: Driver / Vehicle Analysis_Vehicle Movement_Decelerated for observed pedestrian',
