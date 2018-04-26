@@ -324,6 +324,21 @@ def plotData(data):
 	plt.xlabel('2gram 9')
 	plt.ylabel('winner')	
 	
+	pd.crosstab(data['13-18y'], data['Winner']).plot(kind='bar')
+	plt.title('Teenager vs winner')
+	plt.xlabel('Teenager adult')
+	plt.ylabel('winner')	
+	
+	pd.crosstab(data['Distraction'], data['Winner']).plot(kind='bar')
+	plt.title('Distraction vs winner')
+	plt.xlabel('Distraction')
+	plt.ylabel('winner')	
+	
+	pd.crosstab(data['Sunny'], data['Winner']).plot(kind='bar')
+	plt.title('Sunny vs winner')
+	plt.xlabel('Sunny')
+	plt.ylabel('winner')	
+	
 	pd.crosstab(data['Gender'], data['Winner']).plot(kind='bar')
 	plt.title('Pedestrian Gender vs winner')
 	plt.xlabel('Pedestrian Gender')
