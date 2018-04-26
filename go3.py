@@ -223,6 +223,8 @@ def createDataFrame(dct_reverse, winners):
 	
 	data = pd.DataFrame(data=dt[1:,0:], index=np.arange(len(winners)), columns=dt[0,0:])
 	
+	data = data.drop(data.columns[[9, 33, 37, 40, 47, 59, 107, 108, 109, 110]], axis=1)
+	
 	return data
 
 def plotData(data):
@@ -277,11 +279,6 @@ def plotData(data):
 	pd.crosstab(data['Action 31'], data['Winner']).plot(kind='bar')
 	plt.title('Action 31 vs winner')
 	plt.xlabel('Action 31: Pedestrian looked at other RUs')
-	plt.ylabel('winner')
-	
-	pd.crosstab(data['Action 36'], data['Winner']).plot(kind='bar')
-	plt.title('Action 36 vs winner')
-	plt.xlabel('Action 36: Pedestrian raised hand sidewards')
 	plt.ylabel('winner')
 
 	pd.crosstab(data['Action 40'], data['Winner']).plot(kind='bar')
@@ -410,7 +407,7 @@ def logitRegression(data):
 	print("\nFeature index: " + str(np.where(features == True)))
 
 	# train with selected features
-	train_cols = ['Action 1', 'Action 7', 'Action 9', 'Action 10', 'Action 12', 'Action 17', 'Action 27', 'Action 29', 'Action 31', 'Action 36', 'Action 40', 'Action 43', 'Action 47', 'Action 50', '2gram 4', '2gram 6', '2gram 8', '2gram 9']
+	train_cols = ['Action 1', 'Action 7', 'Action 9', 'Action 10',  'Action 12', 'Action 17', 'Action 27', 'Action 29', 'Action 31', 'Action 37', 'Action 40', 'Action 43', 'Action 47', 'Action 50', '2gram 4', '2gram 6', '2gram 8', '2gram 9']
 	X = data[train_cols]	
 	#print(X)
 	y = data['Winner']
