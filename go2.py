@@ -275,7 +275,7 @@ def logitRegression(data):
 	
 	# Feature Selection
 	logistic = LogisticRegression()
-	rfe = RFE(logistic, 5)
+	rfe = RFE(logistic, 18)
 	rfe = rfe.fit(inputs, winners)
 	print(rfe.support_)
 	print(rfe.ranking_)
