@@ -44,12 +44,20 @@ import statsmodels.api as sm
 from scipy import stats
 stats.chisqprob = lambda chisq, df: stats.chi2.sf(chisq, df)
 
-
-
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import roc_curve
 
 from sklearn.metrics import classification_report
+
+from sklearn.model_selection import cross_val_score
+from sklearn.tree import DecisionTreeRegressor
+
+from sklearn.model_selection import GridSearchCV 
+from sklearn.metrics import make_scorer 
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import r2_score
+
+from sklearn.tree import export_graphviz
 
 def loadNoneEvents():  #load lists of human-selected "non-events" ie those which are not real events such as Null and Unobs
 	dct_noneEvents=dict()
@@ -168,37 +176,37 @@ def addDescription(descriptorss, inputs, seqs, motifs):
 	
 	for i in range(0, len(descriptorss)):
 		if any("from_Single" in s for s in descriptorss[i]): # single interacting car
-			inputs[i, 65] = 1		
+			inputs[i, 62] = 1		
 		if any("From right" in s for s in descriptorss[i]):  # car coming from right
-			inputs[i, 66] = 1
+			inputs[i, 63] = 1
 		if any("Overcast" in s for s in descriptorss[i]):   # weather overcast
-			inputs[i, 67] = 1
+			inputs[i, 64] = 1
 		if any("Sunny" in s for s in descriptorss[i]):      # weather sunny
-			inputs[i, 68] = 1
+			inputs[i, 65] = 1
 		if any("Rainy" in s for s in descriptorss[i]):     # weather rainy
-			inputs[i, 69] = 1
+			inputs[i, 66] = 1
 		if any("Group" in s for s in descriptorss[i]):     # group of people
-			inputs[i, 70] = 1
+			inputs[i, 67] = 1
 		if any("(13-18y)" in s for s in descriptorss[i]):  # pedestrian teenager
-			inputs[i, 71] = 1
+			inputs[i, 68] = 1
 		if any("(18-30y)" in s for s in descriptorss[i]):  # pedestrian young adult
-			inputs[i, 72] = 1
+			inputs[i, 69] = 1
 		if any("(30-60y)" in s for s in descriptorss[i]):   # pedestrian midage adult
-			inputs[i, 73] = 1
+			inputs[i, 70] = 1
 		if any("(60+ years)" in s for s in descriptorss[i]):  # pedestrian old adult
-			inputs[i, 74] = 1
+			inputs[i, 71] = 1
 		if any("Distraction" in s for s in descriptorss[i]):   # pedstrian distracted
-			inputs[i, 75] = 1  
+			inputs[i, 72] = 1  
 		if any("Females" in s for s in descriptorss[i]):     # pedestrian female  # default is 0: male
-			inputs[i, 76] = 1
+			inputs[i, 73] = 1
 		if any("_Individual female" in s for s in descriptorss[i]):  # pedestrian female # default is 0: male
-			inputs[i, 76] = 1
+			inputs[i, 73] = 1
 		
 	#TODO add presence/absence of motifs to INPUTS
 	for i in range(len(seqs)):
 		for j in range(len(motifs)):
 			for k in range(10):
-				inputs[i, 77 + 10*j + k] = findMotif(seqs[i], list(motifs[j][k][0]))
+				inputs[i, 74 + 10*j + k] = findMotif(seqs[i], list(motifs[j][k][0]))
 				
 	return inputs
 	
@@ -206,7 +214,7 @@ def addDescription(descriptorss, inputs, seqs, motifs):
 def createDataFrame(dct_reverse, winners):
 	
 	action = ["Action " + str(x) for x in range(0, len(dct_reverse))]
-	desc = np.array(["from_Single", "From right", "Overcast", "Sunny", "Rainy", "Group", "13-18y", "18-30y", "30-60y", "60+ years", "Distraction", "Gender", "Empty1", "Empty2 ", "Empty3", "Empty4"])
+	desc = np.array(["from_Single", "From right", "Overcast", "Sunny", "Rainy", "Group", "13-18y", "18-30y", "30-60y", "60+ years", "Distraction", "Gender"])
 	motif2gram =  ["2gram " + str(x) for x in range(1, 11)]
 	motif3gram =  ["3gram " + str(x) for x in range(1,11)]
 	motif4gram =  ["4gram " + str(x) for x in range(1,11)]
@@ -216,14 +224,14 @@ def createDataFrame(dct_reverse, winners):
 	column_names = np.hstack((column_names, motif3gram))
 	column_names = np.hstack((column_names, motif4gram))
 	column_names = np.hstack((np.array(["Winner"]), column_names))
-	
+			
 	win = np.reshape(winners, (len(winners), 1))
 	dt = np.hstack((win, inputs))	
 	dt = np.vstack((column_names, dt))
 	
 	data = pd.DataFrame(data=dt[1:,0:], index=np.arange(len(winners)), columns=dt[0,0:])
 	
-	data = data.drop(data.columns[[9, 33, 37, 40, 47, 59, 107, 108, 109, 110]], axis=1)
+	data = data.drop(list(['Action 9', 'Action 31', 'Action 38', 'Action 40', 'Action 45', 'Action 59', '2gram 10', '4gram 8']), 1)
 	
 	return data
 
@@ -246,46 +254,42 @@ def plotData(data):
 	plt.xlabel('Action 7: Pedestrian looked at vehicle')
 	plt.ylabel('winner')	
 
-	pd.crosstab(data['Action 9'], data['Winner']).plot(kind='bar')
-	plt.title('Action 9 vs winner')
-	plt.xlabel('Action 9: Vehicle passed Ped (approaching)')
-	plt.ylabel('winner')
-
 	pd.crosstab(data['Action 10'], data['Winner']).plot(kind='bar')
 	plt.title('Action 10 vs winner')
 	plt.xlabel('Action 10: Pedestrian initiated crossing')
 	plt.ylabel('winner')
 
-	pd.crosstab(data['Action 12'], data['Winner']).plot(kind='bar')
+	pd.crosstab(data['Action 28'], data['Winner']).plot(kind='bar')
 	plt.title('Action 12 vs winner')
-	plt.xlabel('Action 12: Vehicle decelerated due to traffic')
+	plt.xlabel('Action 12: Vehicle interacting')
 	plt.ylabel('winner')
 	
-	pd.crosstab(data['Action 17'], data['Winner']).plot(kind='bar')
+	pd.crosstab(data['Action 30'], data['Winner']).plot(kind='bar')
 	plt.title('Action 17 vs winner')
-	plt.xlabel('Action 17: Pedestrian mvt while crossing (notes)')
+	plt.xlabel('Action : Vehicle Bus/Truck')
 	plt.ylabel('winner')
 	
-	pd.crosstab(data['Action 27'], data['Winner']).plot(kind='bar')
+	pd.crosstab(data['Action 36'], data['Winner']).plot(kind='bar')
 	plt.title('Action 27 vs winner')
-	plt.xlabel('Action 27: Pedestrian slowed down/stopped')
+	plt.xlabel('Action 27: Pedestrian looked at other RUs')
 	plt.ylabel('winner')
 	
-	pd.crosstab(data['Action 29'], data['Winner']).plot(kind='bar')
+	pd.crosstab(data['Action 42'], data['Winner']).plot(kind='bar')
 	plt.title('Action 29 vs winner')
-	plt.xlabel('Action 29: Pedestrian speeded up while crossing')
+	plt.xlabel('Action 29: Driver hand mvt raised in front')
 	plt.ylabel('winner')
 	
-	pd.crosstab(data['Action 31'], data['Winner']).plot(kind='bar')
+	pd.crosstab(data['Action 46'], data['Winner']).plot(kind='bar')
 	plt.title('Action 31 vs winner')
 	plt.xlabel('Action 31: Pedestrian looked at other RUs')
 	plt.ylabel('winner')
 
-	pd.crosstab(data['Action 43'], data['Winner']).plot(kind='bar')
+	pd.crosstab(data['Action 51'], data['Winner']).plot(kind='bar')
 	plt.title('Action 43 vs winner')
 	plt.xlabel('Action 43: Driver hand mvt turned in direction of pedestrian')
 	plt.ylabel('winner')
 	
+	"""
 	pd.crosstab(data['Action 50'], data['Winner']).plot(kind='bar')
 	plt.title('Action 50 vs winner')
 	plt.xlabel('Action 50: Vehicle decelerated due to observed Pedestrian')
@@ -311,6 +315,8 @@ def plotData(data):
 	plt.xlabel('2gram 9')
 	plt.ylabel('winner')	
 	
+	"""
+	
 	pd.crosstab(data['13-18y'], data['Winner']).plot(kind='bar')
 	plt.title('Teenager vs winner')
 	plt.xlabel('Teenager adult')
@@ -335,11 +341,12 @@ def plotData(data):
 def logitRegression(data):
 		
 	# creating testing and training set
-	X_train,X_test,Y_train,Y_test = train_test_split(inputs,winners,test_size=0.33)
+	X_train,X_test,Y_train,Y_test = train_test_split(data.drop('Winner', 1), winners,test_size=0.33)
 	
 	# train scikit learn model 
 	clf = LogisticRegression()
 	clf.fit(X_train,Y_train)
+	print(clf)
 	score = round(clf.score(X_test,Y_test), 2)
 	print('score Scikit learn: ', score)
 
@@ -364,7 +371,6 @@ def logitRegression(data):
 	
 	# cross validation
 	kfold = sklearn.cross_validation.KFold(X_train.shape[0], n_folds=10)
-	modelCV = LogisticRegression()
 	scoring = 'accuracy'
 	results = sklearn.metrics.accuracy_score(Y_test, predicted)
 	print("\n\n 10-fold cross validation average accuracy: %.3f" % (results.mean()))
@@ -389,7 +395,7 @@ def logitRegression(data):
 	plt.show()
 	
 	# Feature Selection
-	rfe = RFE(clf, 18)
+	rfe = RFE(clf, 5)
 	rfe = rfe.fit(inputs, winners)
 	print(rfe.support_)
 	print(rfe.ranking_)
@@ -397,13 +403,43 @@ def logitRegression(data):
 	print("\nFeature index: " + str(np.where(features == True)))
 
 	# train with selected features
-	train_cols = ['Action 1', 'Action 7', 'Action 9', 'Action 10',  'Action 12', 'Action 17', 'Action 27', 'Action 29', 'Action 31', 'Action 37', 'Action 40', 'Action 43', 'Action 47', 'Action 50', '2gram 4', '2gram 6', '2gram 8', '2gram 9']
+	#train_cols = ['Action 0', 'Action 6', 'Action 8', 'Action 10', 'Action 27', 'Action 29', 'Action 35', 'Action 41', 'Action 44', 'Action 49']
+	train_cols = ['Action 1', 'Action 7', 'Action 10', 'Action 11', 'Action 28', 'Action 30', 'Action 36', 'Action 42', 'Action 46', 'Action 50']
 	X = data[train_cols]	
 	#print(X)
 	y = data['Winner']
 	logit_model = sm.Logit(y.astype(float), X.astype(float))
 	result = logit_model.fit(method='bfgs')
 	print(result.summary())
+	
+	return X_train, Y_train, X_test, Y_test
+	
+def decisionTree(X_train, Y_train, X_test, Y_test):
+	
+	dt = DecisionTreeRegressor(random_state=0, criterion="mse")
+	dt_fit = dt.fit(X_train, Y_train)
+	
+	dt_scores = cross_val_score(dt_fit, X_train, Y_train, cv = 5)
+	print("mean cross validation score: {}".format(np.mean(dt_scores)))
+	print("score without cv: {}".format(dt_fit.score(X_train, Y_train)))
+	
+	# on the test or hold-out set
+	from sklearn.metrics import r2_score
+	print(r2_score(Y_test, dt_fit.predict(X_test)))
+	print(dt_fit.score(X_test, Y_test))
+	
+	scoring = make_scorer(r2_score)
+	g_cv = GridSearchCV(DecisionTreeRegressor(random_state=0), param_grid={'min_samples_split': range(2, 10)}, scoring=scoring, cv=5, refit=True)
+	
+	g_cv.fit(X_train, Y_train)
+	g_cv.best_params_
+	
+	result = g_cv.cv_results_
+	print(result)
+	print(r2_score(Y_test, g_cv.best_estimator_.predict(X_test)))
+	
+	features = data.drop('Winner', 1)
+	export_graphviz(dt_fit, out_file='tree.dot', feature_names= list(features))
 	
 
 if __name__=="__main__":
@@ -414,7 +450,6 @@ if __name__=="__main__":
 	#eg in ~/.bashrc: export ITS_SEQMODEL_DATADIR=/home/user/data/oscarPedestrians/
 
 	(seqs,descriptorss, dct_reverse) = makeSeqs(dir_data, dct_noneEvents)	
-	
 	motifs = []
 
 	for ngram in range(2,5):
@@ -426,9 +461,10 @@ if __name__=="__main__":
 			
 
 	winners = winnerMatrix(len(seqs)) 
+	
 
 	#convert presence/absennce of temporal events to features (to use as inputs to machine learning)
-	inputs = np.zeros(( len(seqs) , 110 )) # was 100
+	inputs = np.zeros(( len(seqs) , 104)) # was 100
 	for i in range(0, len(seqs)):
 		for j in seqs[i]:
 			inputs[i, j] = 1
@@ -442,9 +478,12 @@ if __name__=="__main__":
 	data = createDataFrame(dct_reverse, winners)
 	
 	#plot some statistical information 
-	plotData(data)
+	#plotData(data)
 	
 	# logistic regression
-	logitRegression(data)
+	X_train, Y_train, X_test, Y_test = logitRegression(data)
+	
+	# decision tree
+	decisionTree(X_train, Y_train, X_test, Y_test)
 	
 	
