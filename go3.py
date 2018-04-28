@@ -395,7 +395,7 @@ def logitRegression(data):
 	plt.show()
 	
 	# Feature Selection
-	rfe = RFE(clf, 5)
+	rfe = RFE(clf, 10)
 	rfe = rfe.fit(inputs, winners)
 	print(rfe.support_)
 	print(rfe.ranking_)
@@ -461,7 +461,13 @@ if __name__=="__main__":
 			
 
 	winners = winnerMatrix(len(seqs)) 
-	
+
+	# convert winning labels: 0 for pedestrian and 1 for vehicle
+	for i in range(0, len(winners)):
+		if(winners[i] == 0):
+			winners[i] = 1
+		else:
+			winners[i] = 0
 
 	#convert presence/absennce of temporal events to features (to use as inputs to machine learning)
 	inputs = np.zeros(( len(seqs) , 104)) # was 100
