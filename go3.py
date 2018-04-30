@@ -35,6 +35,8 @@ from sklearn import preprocessing
 import matplotlib.pyplot as plt 
 plt.rc("font", size=14)
 from sklearn.linear_model import LogisticRegression
+#from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
 from sklearn.cross_validation import train_test_split
 import seaborn as sns
 sns.set(style="white")
@@ -58,6 +60,9 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import r2_score
 
 from sklearn.tree import export_graphviz
+
+from sklearn.feature_selection import mutual_info_classif
+from sklearn.feature_extraction.text import CountVectorizer
 
 def loadNoneEvents():  #load lists of human-selected "non-events" ie those which are not real events such as Null and Unobs
 	dct_noneEvents=dict()
@@ -350,11 +355,13 @@ def logitRegression(data):
 	score = round(clf.score(X_test,Y_test), 2)
 	print('score Scikit learn: ', score)
 
+	
 	#logistic.fit(inputs,winners)
 	predicted = clf.predict(X_test)
 	print("Predicted: " + str(predicted))
-	plt.figure()
-	plt.plot(predicted)
+	#plt.figure()
+	#plt.plot(predicted)
+	
 	
 	# Metrics: confusion matrix
 	cm = metrics.confusion_matrix(Y_test, predicted)
@@ -394,9 +401,9 @@ def logitRegression(data):
 	plt.savefig('Log_ROC')
 	plt.show()
 	
-	# Feature Selection
+	# Feature Selection using RFE
 	rfe = RFE(clf, 10)
-	rfe = rfe.fit(inputs, winners)
+	rfe = rfe.fit(data.drop('Winner', 1), data['Winner'])
 	print(rfe.support_)
 	print(rfe.ranking_)
 	features = rfe.support_
@@ -404,29 +411,32 @@ def logitRegression(data):
 
 	# train with selected features
 	#train_cols = ['Action 0', 'Action 6', 'Action 8', 'Action 10', 'Action 27', 'Action 29', 'Action 35', 'Action 41', 'Action 44', 'Action 49']
-	train_cols = ['Action 1', 'Action 7', 'Action 10', 'Action 11', 'Action 28', 'Action 30', 'Action 36', 'Action 42', 'Action 46', 'Action 50']
+	train_cols = ['Action 1', 'Action 7', 'Action 16', 'Action 21', 'Action 25', 'Action 26', 'Action 27', 'Action 29', 'Action 41', '2gram 8']
 	X = data[train_cols]	
 	#print(X)
 	y = data['Winner']
 	logit_model = sm.Logit(y.astype(float), X.astype(float))
 	result = logit_model.fit(method='bfgs')
 	print(result.summary())
+	print(result.pred_table())
+	print(result.bic)
 	
 	return X_train, Y_train, X_test, Y_test
 	
+	
+	
 def decisionTree(X_train, Y_train, X_test, Y_test):
 	
-	dt = DecisionTreeRegressor(random_state=0, criterion="mse")
+	dt = DecisionTreeRegressor(random_state=0, criterion="mse", max_depth=7, max_features=15)
 	dt_fit = dt.fit(X_train, Y_train)
 	
-	dt_scores = cross_val_score(dt_fit, X_train, Y_train, cv = 5)
+	dt_scores = cross_val_score(dt_fit, X_train, Y_train, cv = 10)
 	print("mean cross validation score: {}".format(np.mean(dt_scores)))
 	print("score without cv: {}".format(dt_fit.score(X_train, Y_train)))
 	
 	# on the test or hold-out set
-	from sklearn.metrics import r2_score
-	print(r2_score(Y_test, dt_fit.predict(X_test)))
-	print(dt_fit.score(X_test, Y_test))
+	print("r2_score: " + str(r2_score(Y_test, dt_fit.predict(X_test))))
+	print("dt_fit.score : " + str(dt_fit.score(X_test, Y_test)))
 	
 	scoring = make_scorer(r2_score)
 	g_cv = GridSearchCV(DecisionTreeRegressor(random_state=0), param_grid={'min_samples_split': range(2, 10)}, scoring=scoring, cv=5, refit=True)
@@ -435,7 +445,7 @@ def decisionTree(X_train, Y_train, X_test, Y_test):
 	g_cv.best_params_
 	
 	result = g_cv.cv_results_
-	print(result)
+	#print(result)
 	print(r2_score(Y_test, g_cv.best_estimator_.predict(X_test)))
 	
 	features = data.drop('Winner', 1)
@@ -458,16 +468,8 @@ if __name__=="__main__":
 		motifs.append(res[:10])
 		showResults(res, dct_reverse)
 		print("")
-			
 
-	winners = winnerMatrix(len(seqs)) 
-
-	# convert winning labels: 0 for pedestrian and 1 for vehicle
-	for i in range(0, len(winners)):
-		if(winners[i] == 0):
-			winners[i] = 1
-		else:
-			winners[i] = 0
+	winners = winnerMatrix(len(seqs))
 
 	#convert presence/absennce of temporal events to features (to use as inputs to machine learning)
 	inputs = np.zeros(( len(seqs) , 104)) # was 100
