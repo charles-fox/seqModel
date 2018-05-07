@@ -10,7 +10,7 @@ from winnerMatrix import *
 from entropy import *
 
 
-
+# to deal with zeros for log funcion
 def goodTuring(pSeq, pDesc):
 	
 	for freq in pSeq:	
@@ -28,8 +28,7 @@ def goodTuring(pSeq, pDesc):
 	return pSeq, pDesc
 
 
-def probDesc(descriptor, winner, pDesc):
-	lDesc = np.array(["from_Single", "From right", "Overcast", "Sunny", "Raining", "Group", "13-18y", "18-30y", "30-60y", "60+ years", "Distraction", "Female"])
+def probDesc(lDesc, descriptor, winner, pDesc):
 	
 	for j in range(0, len(lDesc)):
 		dwin = 0
@@ -38,7 +37,7 @@ def probDesc(descriptor, winner, pDesc):
 		if any( lDesc[j] in s for s in descriptor): # single interacting car
 			if(j == 10):
 				if any( "Distraction_None" in s for s in descriptor): 
-					j += 1
+					continue
 				elif(winner == 1):
 					dwin += 1 
 				else:
@@ -53,7 +52,7 @@ def probDesc(descriptor, winner, pDesc):
 	return pDesc
 						
 # compute prob of eavh sequence and descriptors given matrix of winner
-def probSeq(seqs, descriptorss, dct_reverse, winMatrix):
+def probSeq(seqs, descriptorss, dct_reverse, winMatrix, lDesc):
 	
 	pSeq = dict()
 	pDesc = dict()
@@ -79,7 +78,7 @@ def probSeq(seqs, descriptorss, dct_reverse, winMatrix):
 				else:
 					plose += 1					
 			pSeq[label] = (pSeq[label][0] + pwin, pSeq[label][1] + plose)
-		pDesc = probDesc(descriptorss[i], winner, pDesc)
+		pDesc = probDesc(lDesc, descriptorss[i], winner, pDesc)
 		
 		
 	pSeq, pDesc = goodTuring(pSeq, pDesc)
@@ -122,13 +121,31 @@ def descInfoGain(pDesc):
 		
 	return I_2Ddesc
 		
-def initPlot(pDesc):
-	print("init")
+def initPlot(I_2Ddesc, lDesc, descriptorss):
+	print("\n init \n")
+	
+	initprob = []
+	for descriptor in descriptorss:
+		p = 1
+		for i in range(0, len(lDesc)):
+			if any( lDesc[i] in s for s in descriptor): # single interacting car
+				if(i == 10):
+					if any( "Distraction_None" in s for s in descriptor): 
+						continue
+					else:
+						p *= I_2Ddesc[i]
+				else:
+					p *= I_2Ddesc[i]
+				
+		initprob.append(p)
+		print(p)
+				
 	
 if __name__=="__main__":
 	dct_noneEvents = loadNoneEvents()
 
 	dir_data = os.environ['ITS_SEQMODEL_DATADIR']
+	lDesc = np.array(["from_Single", "From right", "Overcast", "Sunny", "Raining", "Group", "13-18y", "18-30y", "30-60y", "60+ years", "Distraction", "Female"])
 	
 	(seqs,descriptorss, dct_reverse, time) = makeSeqs(dir_data, dct_noneEvents)
 
@@ -137,7 +154,7 @@ if __name__=="__main__":
 	time = np.reshape(time, (203, 2))
 	seqtime, tDelta = duration(time)
 	
-	pSeq, pDesc = probSeq(seqs, descriptorss, dct_reverse, winMatrix)
+	pSeq, pDesc = probSeq(seqs, descriptorss, dct_reverse, winMatrix, lDesc)
 	
 	print(pSeq)
 	print("\n")
@@ -145,3 +162,5 @@ if __name__=="__main__":
 	
 	I_2Dseq = seqInfoGain(pSeq)
 	I_2Ddesc = descInfoGain(pDesc)
+	
+	initPlot(I_2Ddesc, lDesc, descriptorss)
