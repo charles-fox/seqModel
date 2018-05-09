@@ -15,16 +15,16 @@ import matplotlib.pyplot as plt
 def goodTuring(pSeq, pDesc):
 	
 	for freq in pSeq:	
-		if(pSeq[freq][0] == 0):
-			pSeq[freq] = (pSeq[freq][0] + 0.001, pSeq[freq][1] - 0.001)
-		if(pSeq[freq][1] == 0):
-			pSeq[freq] = (pSeq[freq][0] - 0.001, pSeq[freq][1] + 0.001)
+		#if(pSeq[freq][0] == 0):
+		pSeq[freq] = (pSeq[freq][0] + 1, pSeq[freq][1] + 1)
+		#if(pSeq[freq][1] == 0):
+		#pSeq[freq] = (pSeq[freq][0] + 1, pSeq[freq][1] + 1)
 
 	for freq in pDesc:	
-		if(pDesc[freq][0] == 0):
-			pDesc[freq] = (pDesc[freq][0] + 0.001, pDesc[freq][1] - 0.001)
-		if(pDesc[freq][1] == 0):
-			pDesc[freq] = (pDesc[freq][0] - 0.001, pDesc[freq][1] + 0.001)
+		#if(pDesc[freq][0] == 0):
+		pDesc[freq] = (pDesc[freq][0] + 1, pDesc[freq][1] + 1)
+		#if(pDesc[freq][1] == 0):
+		#pDesc[freq] = (pDesc[freq][0] + 1, pDesc[freq][1] + 1)
 
 	return pSeq, pDesc
 
@@ -81,8 +81,19 @@ def probSeq(seqs, descriptorss, dct_reverse, winMatrix, lDesc):
 			pSeq[label] = (pSeq[label][0] + pwin, pSeq[label][1] + plose)
 		pDesc = probDesc(lDesc, descriptorss[i], winner, pDesc)
 		
-		
 	pSeq, pDesc = goodTuring(pSeq, pDesc)
+	
+	#print(pDesc)
+	
+	# convert frequencies into probabilities
+	for key in pSeq:    
+	    pSeq[key] = tuple(t/(len(winMatrix)+2) for t in pSeq[key])
+					
+	for key in pDesc:    
+	     pDesc[key] = tuple(t/(len(winMatrix)+2) for t in pDesc[key])
+						
+	#print(pDesc)
+
 	return pSeq, pDesc
 	
 	
@@ -122,8 +133,42 @@ def descInfoGain(pDesc):
 		
 	return I_2Ddesc
 	
-# compute cumulative probabilities for each descriptor	
-def initProb(I_2Ddesc, lDesc, descriptorss):
+	
+# compute p(W|F_i) = p(F_i|W)*p(W)/(p(F_i|W)*p(W) + p(F_i|L)*p(L)) 
+def pbSeqDesc(pSeq,pDesc, pi_W):
+	
+	pbSeq = []
+	pbDesc_W = []
+	pbDesc_L = []
+	
+	pi_L = 1 - pi_W
+		
+	for freq in pDesc:
+		pbDesc_W.append(pDesc[freq][0]*pi_W / (pDesc[freq][0]*pi_W + pDesc[freq][1]*pi_L))
+		pbDesc_L.append(pDesc[freq][1]*pi_L / (pDesc[freq][1]*pi_L + pDesc[freq][0]*pi_W))
+	
+	p_d_given_W = pi_W*np.array(pbDesc_W).prod()	
+	p_d_given_L = pi_L*np.array(pbDesc_L).prod()	
+	
+	p_W_given_d = p_d_given_W/(p_d_given_W + p_d_given_L)
+	print("\n P_W_given_d: " + str(p_W_given_d))
+	
+	
+
+	#for freq in pSeq:
+	#	pbSeq_W.append(pSeq[freq][0] / (pSeq[freq][0] + pSeq[freq][1]*(1-pWin)))
+	#	pbSeq_L.append(pDesc[freq][1]*(1-pWin) / (pDesc[freq][1]*(1-pWin) + pDesc[freq][0]*(pWin)))	
+	
+	return pbSeq, pbDesc_W, pbDesc_L, p_W_given_d
+	
+	
+	
+	
+	
+# compute cumulative probabilities for each descriptor
+# prod_i of p(w|d_i)	
+#def initProb(I_2pDdesc, lDesc, descriptorss):
+def initProb(pbDesc, lDesc, descriptorss):
 	print("\n init \n")
 	
 	initprob = []
@@ -131,75 +176,93 @@ def initProb(I_2Ddesc, lDesc, descriptorss):
 		for i in range(0, len(lDesc)):
 			if any( lDesc[i] in s for s in descriptor): # single interacting car
 				if(i == 0):
-					p = I_2Ddesc[i]				
+					#p = I_2Ddesc[i]	
+					p = pbDesc[i]
 				elif(i == 10):
 					if any( "Distraction_None" in s for s in descriptor): 
 						continue
 					else:
-						p *= I_2Ddesc[i]	
+						#p *= I_2Ddesc[i]	
+						p *= pbDesc[i]
 				else:
-					p *= I_2Ddesc[i]
+					#p *= I_2Ddesc[i]
+					p *= pbDesc[i]
 				
 		initprob.append(p)
-		print(p)
+	print(initprob)
 	return initprob
 	
 
 # compute cumulative probabilities for each sequence
-def seqProb(I_2Dseq, seqs):
-	
+#def seqProb(I_2Dseq, seqs):
+def seqProb(pbSeq, seqs):	
 	print("\n seqProb \n")	
 	
 	pseq = []
 		
-	for i in range(0, 203):
+	for i in range(0, 10):
 		print("i :" + str(i))
 		p = []
 		for j in range(0, len(seqs[i])):
-			print("j: " + str(j))
-			if(j == 0):
-				p.append(I_2Dseq[seqs[i][j]])
-				print(I_2Dseq[seqs[i][j]])
-			else:
-				print(I_2Dseq[seqs[i][j-1]])
-				print(I_2Dseq[seqs[i][j]] )
-				p.append(I_2Dseq[seqs[i][j-1]] * I_2Dseq[seqs[i][j]])
+			if(len(seqs[i]) > 0):
+				#print("j: " + str(j))
+				if(j == 0):
+					#p.append(I_2Dseq[seqs[i][j]])
+					p.append(pbSeq[seqs[i][j]])
+					#print(pbSeq[seqs[i][j]])
+				else:
+					#print(I_2Dseq[seqs[i][j-1]])
+					#print(I_2Dseq[seqs[i][j]] )
+					#print(pbSeq[seqs[i][j-1]])
+					#print(pbSeq[seqs[i][j]])
+					#p.append(I_2Dseq[seqs[i][j-1]] * I_2Dseq[seqs[i][j]])
+					p.append(pbSeq[seqs[i][j-1]] * pbSeq[seqs[i][j]])
 			
-		print(p)	
+		#print(p)	
 		pseq.append(p)
 	
-	#print(pseq)
+	print(pseq)
 	return pseq
 	
 # compute X (time) and Y(prob) for plot 	
-def prepapreXY(descpb, seqpb, timepb):
+def prepapreXY(np_d_given_W, np_fit_given_W, timepb, pi_W): # np = normalized likelihood
 	
 	print("\n prepareXY \n")	
 	
-	x = 	[]
-	x.append(0)
 	
-	y = []
-	y.append(descpb)
-	
-	for i in range(0, len(seqpb)):
+	if(len(seqpb) > 0):
+		x = 	[]
+		x.append(0)
 		x.append(timepb / len(seqpb)) 
 		
-	for i in range(0 , len(seqpb)):
-		y.append((y[i] * seqpb[i]))
-
-	x = np.cumsum(x)	
+		y = []
+		y.append(pi_W)
+		y.append(np_d_given_W)
 	
-	print("X : " + str(x))
-	print("Y : " + str(y))
-	return x, y
+		for i in range(0, len(seqpb)):
+			x.append(timepb / len(seqpb)) 
+		
+		for i in range(0 , len(seqpb)):
+			y.append(pi_W*np_fit_given_W[i] *np_d_given_W / (pi_W*np_fit_given_W[i] *np_d_given_W) + pi_W* (1 - np_fit_given_W[i]) * (1-np_d_given_W))
+			
+		x = np.cumsum(x)	
+		y = np.cumprod(y)
+	
+		#print("X : " + str(x))
+		#print("Y : " + str(y))
+		
+		return x, y
+	else:
+		return 0,0
+	
 	
 def plotXY(X, Y):
 	
-	plt.plot(X, np.log(Y))
-	plt.title("Mutual information I(W|Data(i:t)) in function of the time")
+	#plt.plot(X, np.log(Y))
+	plt.plot(X, Y)
+	plt.title("P(W|Data(i:t)) in function of the time")
 	plt.xlabel("Time (s)")
-	plt.ylabel("I(W|Data(i:t))")
+	plt.ylabel("P(W|Data(i:t))")
 	plt.show()
 	
 	
@@ -216,12 +279,13 @@ if __name__=="__main__":
 	time = np.reshape(time, (203, 2))
 	seqtime, tDelta = duration(time)
 	
-	pSeq, pDesc = probSeq(seqs, descriptorss, dct_reverse, winMatrix, lDesc)
+	pSeq, pDescW = probSeq(seqs, descriptorss, dct_reverse, winMatrix, lDesc)
 	
 	print(pSeq)
 	print("\n")
 	print(pDesc)
 	
+	'''
 	I_2Dseq = seqInfoGain(pSeq)
 	I_2Ddesc = descInfoGain(pDesc)
 	
@@ -230,6 +294,25 @@ if __name__=="__main__":
 	initpseq = seqProb(I_2Dseq, seqs)
 	
 	plt.figure()
-	for i in range(0, 203):
+	for i in range(0, 10):
 		X, Y = prepapreXY(initprob[i], initpseq[i], tDelta[i])
 		plotXY(X, Y)
+		
+	
+	'''
+	
+	
+	pbSeq, pbDesc_W, pbDecs_L, p_W_given_d = pbSeqDesc(pSeq,pDesc, 0.38)
+
+	
+	initprob = initProb(pbDesc, lDesc, descriptorss)
+	
+	initpseq = seqProb(pbSeq, seqs)
+	
+	plt.figure()
+	for i in range(0, 10):
+		X, Y = prepapreXY(initprob[i], initpseq[i], tDelta[i], 0.38)
+		plotXY(X, Y)
+		
+	
+	
