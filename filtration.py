@@ -117,7 +117,8 @@ def makeTemporalPosteriorSequence( pi_W,  lams_d,  lams_e):
 	
 	t=1
 	for i in range(0, len(lams_d)):
-		p_W_at_t = fuseProbs( p_W_at_t , lams_d[i] )    #fuse in all descriptors
+		#p_W_at_t = fuseProbs( p_W_at_t , lams_d[i] )    #fuse in all descriptors
+		p_W_at_t = (p_W_at_t + lams_d[i])/2 
 	result.append(p_W_at_t)                        #only store result once
 	
 	for t in range(2, 2+len(lams_e)):   #for each event time
@@ -213,6 +214,7 @@ def makeLams_e(seqs, dct_reverse, winMatrix):
 	
 	return normalizedLamList_e
 
+# count the number of features in seqs given the winner 
 def checkFeatureFreq(feature, seqs, winMatrix):
 	win = 0
 	lose = 0
@@ -227,6 +229,12 @@ def checkFeatureFreq(feature, seqs, winMatrix):
 			seqnum.append(i)
 					
 	return win, lose, seqnum
+
+#compute the average of filtered sequences
+#def average(results):
+	
+
+
 
 if __name__=="__main__":
 	dct_noneEvents = loadNoneEvents()
@@ -254,7 +262,7 @@ if __name__=="__main__":
 	plt.xlabel("Time (s)")
 	plt.ylabel("P(W|D(0:t)")
 	'''	
-	feature = 51
+	feature = 48
 	win, lose, seqnum = checkFeatureFreq(feature, seqs, winMatrix)
 	print("Feature " + str(feature) + " wins: " + str(win))
 	print("Feature " + str(feature) + " loses: " + str(lose))
