@@ -22,7 +22,6 @@ def goodTuring(lam):
 	return lam
 
 
-
 # compute frequency/likelihood (p(d_i|w), p(d_i|L)) for the descriptor of one interaction
 # lDesc: list of 12 descriptors (age, distraction, gender...)
 # descriptor: list of descriptors for one interaction
@@ -38,11 +37,11 @@ def makeFreqLams_d(lDesc, descriptor, winner, lam_d):
 			if(j == 10):
 				if any( "Distraction_None" in s for s in descriptor): 
 					continue
-				elif(winner == 0):
+				elif(winner == 1):
 					dwin += 1 
 				else:
 					dlose += 1
-			elif(winner == 0):
+			elif(winner == 1):
 				dwin += 1 
 			else:
 				dlose += 1
@@ -72,29 +71,25 @@ def makeNotNormalizedLams_d(seqs, descriptor, winMatrix, lDesc):
 	return lams_d   
 	
 
-def makeNotNormalizedLams_e(seqs, dct_reverse, winMatrix):
+def makeNotNormalizedFreq_e(seqs, dct_reverse, winMatrix):
 	
-	lams_e = dict()
+	freqs_e = dict()
 		
 	for i in range(0, len(dct_reverse)):
-		lams_e[i] = (0,0)
+		freqs_e[i] = (0,0)
 	
 	for i in range(0, len(seqs)):
 		winner = winMatrix[i]
 
-		for label in dct_reverse:
-			fwin = 0
-			flose = 0
-			if(label in seqs[i]):
-				if(winner == 0):
-					fwin += 1	
-				else:
-					flose += 1					
-			lams_e[label] = (lams_e[label][0] + fwin, lams_e[label][1] + flose)   # lam_f: list of for sequence features (p(f_i|W), p(f_i|L))
+		for label in seqs[i]:
+			if(winner == 1):
+				freqs_e[label] = (freqs_e[label][0] + 1, freqs_e[label][1])
+			else:
+				freqs_e[label] = (freqs_e[label][0], freqs_e[label][1] + 1)   # lam_f: list of for sequence features (p(f_i|W), p(f_i|L))
 	
-	print("lams_e: " + str(lams_e))
+	print("lams_e: " + str(freqs_e))
 						
-	return lams_e
+	return freqs_e
 
 #assume there are two types of feature: descriptors (which occur all at t=0) and events (which occur at t)
 
@@ -104,8 +99,8 @@ def fuseProbs(p1, p2):
 				
 
 def makeNormalizedLikelihood( p_di_given_W , p_di_given_L):
-					
-	return p_di_given_W/(p_di_given_W + p_di_given_L)
+	
+	return p_di_given_W/(p_di_given_W + p_di_given_L + 0.0)
 
 #all of this is for one single interaction
 def makeTemporalPosteriorSequence( pi_W,  lams_d,  lams_e):   
@@ -126,7 +121,8 @@ def makeTemporalPosteriorSequence( pi_W,  lams_d,  lams_e):
 	result.append(p_W_at_t)                        #only store result once
 	
 	for t in range(2, 2+len(lams_e)):   #for each event time
-		p_W_at_t = fuseProbs( p_W_at_t , lams_e[t-2] )    #fuse in all descriptors
+		#p_W_at_t = fuseProbs( p_W_at_t , lams_e[t-2] )    #fuse in all descriptors
+		p_W_at_t = (p_W_at_t + lams_e[t-2])/2 
 		result.append(p_W_at_t)                                      #here we store result at each time
 	
 	print("Result: " + str(result))
@@ -135,14 +131,15 @@ def makeTemporalPosteriorSequence( pi_W,  lams_d,  lams_e):
 def makeLams_d(seqs, descriptorss, dct_reverse, winMatrix, lDesc):
 	
 	#you know freq(d_i | W)  and freq(d_i|L)   -- these are just frequencies 
-	lams_d = makeNotNormalizedLams_d(seqs, descriptorss, winMatrix, lDesc)
+	freqs_d = makeNotNormalizedLams_d(seqs, descriptorss, winMatrix, lDesc)
 	
-	lams_d = goodTuring(lams_d) # + GoodTuring
+	freqs_d = goodTuring(freqs_d) # + GoodTuring
 
 	#you compute (not normalized)  P(d_i | W)  and P(d_i|L) from the frequencies
 	# convert frequencies into probabilities
-	for key in lams_d:    
-	    lams_d[key] = tuple(t/(len(seqs)+2) for t in lams_d[key])
+	lams_d = dict()
+	for key in freqs_d:    
+	    lams_d[key] = tuple(t/(len(seqs)+2) for t in freqs_d[key])
 
 	#normlize each one:   makeNormalizedLikelihood( p_di_given_W , p_di_given_L):
 	for key in lams_d:
@@ -164,10 +161,8 @@ def makeLams_d(seqs, descriptorss, dct_reverse, winMatrix, lDesc):
 					if any( "Distraction_None" in s for s in descriptorss[i]): 
 						continue
 					else:
-						print("Else of j=10: " + str(lams_d[j][0]) )
 						features.append(lams_d[j][0])
 				else:
-					print("Else of j ! 10: " + str(lams_d[j][0]))
 					features.append(lams_d[j][0])
 			
 		normalizedLamList_d.append(features)
@@ -182,17 +177,20 @@ def makeLams_d(seqs, descriptorss, dct_reverse, winMatrix, lDesc):
 def makeLams_e(seqs, dct_reverse, winMatrix):
 	
 	#you know freq(d_i | W)  and freq(d_i|L)   -- these are just frequencies 
-	lams_e = makeNotNormalizedLams_e(seqs, dct_reverse, winMatrix)
+	freqs_e = makeNotNormalizedFreq_e(seqs, dct_reverse, winMatrix)
 	
-	lams_e = goodTuring(lams_e) # + GoodTuring
+	freqs_e = goodTuring(freqs_e) # + GoodTuring
 
 	#you compute (not normalized)  P(d_i | W)  and P(d_i|L) from the frequencies
 	# convert frequencies into probabilities
-	for key in lams_e:    
-	    lams_e[key] = tuple(t/(len(seqs)+2) for t in lams_e[key])
+	lams_e = dict()
+	for key in freqs_e:    
+	    lams_e[key] = tuple(t/(len(seqs)+2) for t in freqs_e[key])
 
 	#normlize each one:   makeNormalizedLikelihood( p_di_given_W , p_di_given_L):
 	for key in lams_e:
+		if(key == 48):
+			print("Hello\n") 
 		p_e_given_W = makeNormalizedLikelihood(lams_e[key][0] , lams_e[key][1])
 		p_e_given_L = makeNormalizedLikelihood(lams_e[key][1] , lams_e[key][0])
 		lams_e[key] = (p_e_given_W , p_e_given_L)
@@ -215,6 +213,20 @@ def makeLams_e(seqs, dct_reverse, winMatrix):
 	
 	return normalizedLamList_e
 
+def checkFeatureFreq(feature, seqs, winMatrix):
+	win = 0
+	lose = 0
+	seqnum = []
+	for i in range(0, len(seqs)):
+		winner = winMatrix[i]
+		if feature in seqs[i]:
+			if(winner == 1):
+				win += 1
+			else:
+				lose += 1
+			seqnum.append(i)
+					
+	return win, lose, seqnum
 
 if __name__=="__main__":
 	dct_noneEvents = loadNoneEvents()
@@ -233,6 +245,18 @@ if __name__=="__main__":
 	normalizedLamList_e = makeLams_e(seqs, dct_reverse, winMatrix)
 	
 	plt.figure()
-	for i in range(0, 10):
-		result = makeTemporalPosteriorSequence( 127/204,  normalizedLamList_d[i],  normalizedLamList_e[i])
-		plt.scatter(np.arange(len(normalizedLamList_e[i]) +2), result)
+	for i in range(148,153):
+		result = makeTemporalPosteriorSequence( 74.0/204,  normalizedLamList_d[i],  normalizedLamList_e[i])
+		plt.plot(np.arange(len(normalizedLamList_e[i]) +2), result)
+		plt.xlim(0,20)
+		plt.ylim(0,1)
+	plt.title("Filtered sequence of P-V interaction " + str(i))
+	plt.xlabel("Time (s)")
+	plt.ylabel("P(W|D(0:t)")
+	'''	
+	feature = 51
+	win, lose, seqnum = checkFeatureFreq(feature, seqs, winMatrix)
+	print("Feature " + str(feature) + " wins: " + str(win))
+	print("Feature " + str(feature) + " loses: " + str(lose))
+	print("Feature " + str(feature) + " found in seqs: " + str(seqnum))
+	'''
