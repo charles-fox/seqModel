@@ -55,20 +55,20 @@ def makeFreqLams_d(lDesc, descriptor, winner, lam_d):
 # descriptorss: list of all descriptors
 # dct_reverse: dict of 62 sequence labels
 # winMatrix: matrix of the winner for each interaction
-def makeNotNormalizedLams_d(seqs, descriptor, winMatrix, lDesc):
+def makeNotNormalizedFreqs_d(seqs, descriptor, winMatrix, lDesc):
 
-	lams_d = dict()
+	freqs_d = dict()
 	
 	for i in range(12):
-		lams_d[i] = (0,0)
+		freqs_d[i] = (0,0)
 	
 	for i in range(0, len(seqs)):
 		winner = winMatrix[i]
-		lams_d = makeFreqLams_d(lDesc, descriptorss[i], winner, lams_d)  # lam_d: list of likelihood for descriptors as (p(d_i|w), p(d_i|L))
+		freqs_d = makeFreqLams_d(lDesc, descriptorss[i], winner, freqs_d)  # lam_d: list of likelihood for descriptors as (p(d_i|w), p(d_i|L))
 				
-	print("lam_d: " + str(lams_d))
+	#print("freqs_d: " + str(freqs_d))
 						
-	return lams_d   
+	return freqs_d   
 	
 
 def makeNotNormalizedFreq_e(seqs, dct_reverse, winMatrix):
@@ -87,7 +87,7 @@ def makeNotNormalizedFreq_e(seqs, dct_reverse, winMatrix):
 			else:
 				freqs_e[label] = (freqs_e[label][0], freqs_e[label][1] + 1)   # lam_f: list of for sequence features (p(f_i|W), p(f_i|L))
 	
-	print("lams_e: " + str(freqs_e))
+	#print("freqs_e: " + str(freqs_e))
 						
 	return freqs_e
 
@@ -117,30 +117,36 @@ def makeTemporalPosteriorSequence( pi_W,  lams_d,  lams_e):
 	
 	t=1
 	for i in range(0, len(lams_d)):
-		#p_W_at_t = fuseProbs( p_W_at_t , lams_d[i] )    #fuse in all descriptors
-		p_W_at_t = (p_W_at_t + lams_d[i])/2 
+		p_W_at_t = fuseProbs( p_W_at_t , lams_d[i] )    #fuse in all descriptors
+		#p_W_at_t = (p_W_at_t + lams_d[i])/2 
 	result.append(p_W_at_t)                        #only store result once
 	
 	for t in range(2, 2+len(lams_e)):   #for each event time
-		#p_W_at_t = fuseProbs( p_W_at_t , lams_e[t-2] )    #fuse in all descriptors
-		p_W_at_t = (p_W_at_t + lams_e[t-2])/2 
+		p_W_at_t = fuseProbs( p_W_at_t , lams_e[t-2] )    #fuse in all descriptors
+		#p_W_at_t = (p_W_at_t + lams_e[t-2])/2 
 		result.append(p_W_at_t)                                      #here we store result at each time
 	
 	print("Result: " + str(result))
 	return result
 
-def makeLams_d(seqs, descriptorss, dct_reverse, winMatrix, lDesc):
+def makeLams_d(seqs, descriptorss, dct_reverse, winMatrix, lDesc, winNum):
 	
 	#you know freq(d_i | W)  and freq(d_i|L)   -- these are just frequencies 
-	freqs_d = makeNotNormalizedLams_d(seqs, descriptorss, winMatrix, lDesc)
+	freqs_d = makeNotNormalizedFreqs_d(seqs, descriptorss, winMatrix, lDesc)
 	
 	freqs_d = goodTuring(freqs_d) # + GoodTuring
 
 	#you compute (not normalized)  P(d_i | W)  and P(d_i|L) from the frequencies
 	# convert frequencies into probabilities
 	lams_d = dict()
-	for key in freqs_d:    
-	    lams_d[key] = tuple(t/(len(seqs)+2) for t in freqs_d[key])
+	#for key in freqs_d:    
+	#    lams_d[key] = tuple(t/(len(seqs)+2) for t in freqs_d[key])
+	for key in freqs_d:
+		
+		lam_di_given_W = freqs_d[key][0]/(winNum)
+		lam_di_given_L = freqs_d[key][1]/(len(seqs) - winNum)
+		lams_d[key] = (lam_di_given_W, lam_di_given_L)
+		
 
 	#normlize each one:   makeNormalizedLikelihood( p_di_given_W , p_di_given_L):
 	for key in lams_d:
@@ -169,13 +175,13 @@ def makeLams_d(seqs, descriptorss, dct_reverse, winMatrix, lDesc):
 		normalizedLamList_d.append(features)
 		
 	#return  normalizedLamList[ 3,7,9] 
-	print("NormalizedLamList_d: " + str(normalizedLamList_d))
+	#print("NormalizedLamList_d: " + str(normalizedLamList_d))
 	
 	return normalizedLamList_d
 
 
 
-def makeLams_e(seqs, dct_reverse, winMatrix):
+def makeLams_e(seqs, dct_reverse, winMatrix, winNum):
 	
 	#you know freq(d_i | W)  and freq(d_i|L)   -- these are just frequencies 
 	freqs_e = makeNotNormalizedFreq_e(seqs, dct_reverse, winMatrix)
@@ -185,8 +191,13 @@ def makeLams_e(seqs, dct_reverse, winMatrix):
 	#you compute (not normalized)  P(d_i | W)  and P(d_i|L) from the frequencies
 	# convert frequencies into probabilities
 	lams_e = dict()
-	for key in freqs_e:    
-	    lams_e[key] = tuple(t/(len(seqs)+2) for t in freqs_e[key])
+	#for key in freqs_e:    
+	 #   lams_e[key] = tuple(t/(len(seqs)+2) for t in freqs_e[key])
+	
+	for key in freqs_e:
+		lam_e_given_W = freqs_e[key][0]/(winNum)
+		lam_e_given_L = freqs_e[key][1]/(len(seqs) - winNum)
+		lams_e[key] = (lam_e_given_W, lam_e_given_L)
 
 	#normlize each one:   makeNormalizedLikelihood( p_di_given_W , p_di_given_L):
 	for key in lams_e:
@@ -196,7 +207,7 @@ def makeLams_e(seqs, dct_reverse, winMatrix):
 		p_e_given_L = makeNormalizedLikelihood(lams_e[key][1] , lams_e[key][0])
 		lams_e[key] = (p_e_given_W , p_e_given_L)
 	
-	print("Lams_e (prob): " + str(lams_e))
+	#print("Lams_e (prob): " + str(lams_e))
 	
 	#you know which features have occured eg. {3,7,9}
 	normalizedLamList_e = [] 
@@ -210,7 +221,7 @@ def makeLams_e(seqs, dct_reverse, winMatrix):
 		normalizedLamList_e.append(features)
 		
 	#return  normalizedLamList[ 3,7,9] 
-	print("NormalizedLamList_e: " + str(normalizedLamList_e))
+	#print("NormalizedLamList_e: " + str(normalizedLamList_e))
 	
 	return normalizedLamList_e
 
@@ -249,17 +260,18 @@ if __name__=="__main__":
 	time = np.reshape(time, (203, 2))
 	seqtime, tDelta = duration(time)
 		
-	normalizedLamList_d = makeLams_d(seqs, descriptorss, dct_reverse, winMatrix, lDesc)
-	normalizedLamList_e = makeLams_e(seqs, dct_reverse, winMatrix)
+	normalizedLamList_d = makeLams_d(seqs, descriptorss, dct_reverse, winMatrix, lDesc, 74.0)
+	normalizedLamList_e = makeLams_e(seqs, dct_reverse, winMatrix, 74.0)
 	
 	plt.figure()
-	for i in range(148,153):
+	for i in range(140,172):
 		result = makeTemporalPosteriorSequence( 74.0/204,  normalizedLamList_d[i],  normalizedLamList_e[i])
-		plt.plot(np.arange(len(normalizedLamList_e[i]) +2), result)
+		#plt.axvline(x=result.index(max(result)), color='k', linestyle='--')
+		plt.plot(np.arange(len(normalizedLamList_e[i]) +2), result, linestyle='-.')
 		plt.xlim(0,20)
 		plt.ylim(0,1)
 	plt.title("Filtered sequence of P-V interaction " + str(i))
-	plt.xlabel("Time (s)")
+	plt.xlabel("Time (unit)")
 	plt.ylabel("P(W|D(0:t)")
 	'''	
 	feature = 48
