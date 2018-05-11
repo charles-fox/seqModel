@@ -9,7 +9,7 @@ from goTime import  *
 from winnerMatrix import *
 from entropy import *
 import matplotlib.pyplot as plt
-
+import GPy, numpy as np
 
 
 # to deal with zeros for log funcion
@@ -244,8 +244,62 @@ def checkFeatureFreq(feature, seqs, winMatrix):
 #compute the average of filtered sequences
 #def average(results):
 	
+def plotResult(result, time):
+	
+	x_obs = time
+	true_model = result	
+	
+	noise = np.random.normal(0, 1, x_obs.shape)
+	y_obs = np.polyval(true_model, x_obs) + noise
+	
+	# Fit to a 5-th order polynomial
+	fit_model = np.polyfit(x_obs, y_obs, 11)
+	
+	x = np.linspace(0, 30, 10)
+	y_true = np.polyval(true_model, x)
+	y_pred = np.polyval(fit_model, x)
+	
+	# Made up confidence intervals (I'm too lazy to do the math...)
+	high_bound = y_pred + 0.1 * (0.1 * x**4 + 0.1)
+	low_bound = y_pred - 0.1 * (0.1 * x**4 + 0.1)
+	
+	# Plot the results...
+	fig, ax = plt.subplots()
+	ax.fill_between(x, high_bound, low_bound, color='gray', alpha=0.5)
+	ax.plot(x_obs, y_obs, 'ko', label='Observed Values')
+	ax.plot(x, y_pred, 'k--', label='Predicted Model')
+	ax.plot(x, y_true, 'r-', label='True Model')
+	ax.legend(loc='upper left')
+	plt.show()
 
-
+def gpyplot(result, time):
+	
+	
+	#generate some test data
+	X = np.vstack(time)
+	Y = np.vstack(result)
+	#fit and display a Gaussian process
+	kernel = GPy.kern.RBF(input_dim=1, ARD=True, variance=1/100, lengthscale=1.) + GPy.kern.White(1)
+	m= GPy.models.GPRegression(X,Y,kernel)
+	m.optimize(messages=True,max_f_eval = 1000)
+	m.plot()
+	plt.xlim(0, 20)
+	plt.ylim(0,1)
+	
+	plt.title("P(W|D(0:t)) over time")
+	plt.xlabel("Time")
+	plt.ylabel("P(W|D(0:t))")
+	plt.show()
+	'''
+	slices = [0, 0.5, 1]
+	figure = GPy.plotting.plotting_library().figure(1,1)
+	#for i, y in zip(range(1), slices):
+	m.plot(figure=figure, fixed_inputs=[(1,0)], row=(0), plot_data=False)
+	plt.title(title)
+	plt.xlabel('Time')
+	plt.ylabel('P(W|D(0:t))')
+	plt.show()
+	'''
 
 if __name__=="__main__":
 	dct_noneEvents = loadNoneEvents()
@@ -263,16 +317,21 @@ if __name__=="__main__":
 	normalizedLamList_d = makeLams_d(seqs, descriptorss, dct_reverse, winMatrix, lDesc, 74.0)
 	normalizedLamList_e = makeLams_e(seqs, dct_reverse, winMatrix, 74.0)
 	
-	plt.figure()
-	for i in range(140,172):
+	#plt.figure()
+	for i in range(149,150):
 		result = makeTemporalPosteriorSequence( 74.0/204,  normalizedLamList_d[i],  normalizedLamList_e[i])
 		#plt.axvline(x=result.index(max(result)), color='k', linestyle='--')
-		plt.plot(np.arange(len(normalizedLamList_e[i]) +2), result, linestyle='-.')
-		plt.xlim(0,20)
-		plt.ylim(0,1)
+		#plt.plot(np.arange(len(normalizedLamList_e[i]) +2), result, linestyle='-.')
+		#plotResult(result, np.arange(len(normalizedLamList_e[i]) +2))
+		gpyplot(result, np.arange(len(normalizedLamList_e[i]) +2))		
+		#plt.xlim(0,20)
+		#plt.ylim(0,1)
+	'''
 	plt.title("Filtered sequence of P-V interaction " + str(i))
 	plt.xlabel("Time (unit)")
 	plt.ylabel("P(W|D(0:t)")
+	'''	
+	
 	'''	
 	feature = 48
 	win, lose, seqnum = checkFeatureFreq(feature, seqs, winMatrix)
