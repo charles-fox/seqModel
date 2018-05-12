@@ -290,16 +290,47 @@ def gpyplot(result, time):
 	plt.xlabel("Time")
 	plt.ylabel("P(W|D(0:t))")
 	plt.show()
-	'''
-	slices = [0, 0.5, 1]
-	figure = GPy.plotting.plotting_library().figure(1,1)
-	#for i, y in zip(range(1), slices):
-	m.plot(figure=figure, fixed_inputs=[(1,0)], row=(0), plot_data=False)
-	plt.title(title)
-	plt.xlabel('Time')
-	plt.ylabel('P(W|D(0:t))')
-	plt.show()
-	'''
+
+def addEndGameVehicle(result, time, seq):
+	endgame = False
+	for i in range(0, len(seq)):
+		if(endgame == False and (seq[i] == 9 or seq[i] == 13 or seq[i] == 21 or seq[i] == 25 or seq[i] == 19 or seq[i] == 29 or seq[i]== 32 or seq[i] == 38 or seq[i] == 24)):
+			plt.plot(time[i+2], result[i+2], marker='o', color='cyan')
+			plt.vlines(x=time[i+2], ymin=result[i+2]-0.1, ymax= result[i+2]+0.1, color='blue', zorder=2)
+			plt.plot(np.arange(i+3), result[:i+3], linestyle='-', color = 'green', label='V wins')
+			plt.plot(np.arange(i+2,len(time)) , result[i+2:], linestyle=':', color = 'green', label='V wins')
+			endgame = True
+		else:
+			continue
+	
+	
+def addEndGamePedestrian(result, time, seq):
+	endgame = False
+	for i in range(0, len(seq)):
+		if(endgame == False):
+			if(seq[i] == 27 or seq[i] == 31 or seq[i] == 41 or seq[i] == 48 or seq[i] == 61 or seq[i] == 45 or seq[i] == 26 or result[i] > 0.6):
+				plt.plot(time[i+2], result[i+2], marker='o', color='red')
+				plt.vlines(x=time[i+2], ymin=result[i+2]-0.1, ymax= result[i+2]+0.1, color='purple', zorder=2)
+				plt.plot(np.arange(i+3), result[:i+3], linestyle='-', color = 'red', label='P wins')
+				#plt.plot(np.arange(i+2,len(time)) , result[i+2:], linestyle=':', color = 'red', label='P wins')
+				#plt.plot([i+2, i+5], [result[i+2], 0.5], marker='o')
+				plt.plot(np.arange(i+2,len(time)) , result[i+2:] , linestyle=':', color = 'red', label='P wins')
+				endgame = True
+		else:
+			continue
+
+def histogram(seqs):
+	length = []
+	for i in range(0, len(seqs)):
+		length.append(len(seqs[i]))
+		
+	plt.figure()
+	plt.hist(length)
+	plt.title("Sequence Length")
+	plt.xlabel("Length")
+	plt.ylabel("Frequency")
+	fig = plt.gcf()
+
 
 if __name__=="__main__":
 	dct_noneEvents = loadNoneEvents()
@@ -317,20 +348,33 @@ if __name__=="__main__":
 	normalizedLamList_d = makeLams_d(seqs, descriptorss, dct_reverse, winMatrix, lDesc, 74.0)
 	normalizedLamList_e = makeLams_e(seqs, dct_reverse, winMatrix, 74.0)
 	
-	#plt.figure()
-	for i in range(149,150):
+	plt.figure()
+	for i in range(149, 150):
 		result = makeTemporalPosteriorSequence( 74.0/204,  normalizedLamList_d[i],  normalizedLamList_e[i])
 		#plt.axvline(x=result.index(max(result)), color='k', linestyle='--')
-		#plt.plot(np.arange(len(normalizedLamList_e[i]) +2), result, linestyle='-.')
+		if(len(normalizedLamList_e[i]) +2 >= 2):
+			if(winMatrix[i] == 1):
+				addEndGamePedestrian(result, np.arange(len(normalizedLamList_e[i]) +2), seqs[i])
+				#plt.vlines(x=result.index(max(result))-0.75, ymin=0, ymax=max(result) + 0.1, color='black', linestyle=':', zorder=2)
+				
+			else:
+				plt.plot(np.arange(len(normalizedLamList_e[i]) +2), result, linestyle='-', color = 'blue', label='V wins')
+				#addEndGameVehicle(result, np.arange(len(normalizedLamList_e[i]) +2), seqs[i])
+				
+				 
+		
 		#plotResult(result, np.arange(len(normalizedLamList_e[i]) +2))
-		gpyplot(result, np.arange(len(normalizedLamList_e[i]) +2))		
-		#plt.xlim(0,20)
-		#plt.ylim(0,1)
-	'''
-	plt.title("Filtered sequence of P-V interaction " + str(i))
-	plt.xlabel("Time (unit)")
-	plt.ylabel("P(W|D(0:t)")
-	'''	
+		#gpyplot(result, np.arange(len(normalizedLamList_e[i]) +2))		
+		plt.xlim(0,30)
+		plt.ylim(0,1)
+	
+	plt.title("Filtered sequence of P-V interaction" )#+ str(i))
+	plt.xlabel("Time (t)")
+	plt.ylabel("P(W|D(0:t))")
+	plt.show()
+	#plt.gca().legend(('P wins','V wins'))
+		
+	histogram(seqs)
 	
 	'''	
 	feature = 48
