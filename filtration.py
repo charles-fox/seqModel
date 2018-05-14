@@ -30,24 +30,25 @@ def goodTuring(lam):
 def makeFreqLams_d(lDesc, descriptor, winner, lam_d):
 	
 	for j in range(0, len(lDesc)):
-		dwin = 0
-		dlose = 0
 	
 		if any( lDesc[j] in s for s in descriptor): # single interacting car
-			if(j == 10):
+			if(j<10 and winner == 1):
+				lam_d[j] = (lam_d[j][0] + 1, lam_d[j][1])  # lam_d[j][0] = lam_d_given_W and lam_d[j][1] = lam_d_given_L
+			elif(j< 10 and winner == 0):
+				lam_d[j] = (lam_d[j][0], lam_d[j][1] + 1)  # lam_d[j][0] = lam_d_given_W and lam_d[j][1] = lam_d_given_L
+			elif(j == 10):
 				if any( "Distraction_None" in s for s in descriptor): 
-					continue
+					print("Distraction none")
 				elif(winner == 1):
-					dwin += 1 
+					#print(descriptor)
+					lam_d[j] = (lam_d[j][0] + 1, lam_d[j][1])
 				else:
-					dlose += 1
-			elif(winner == 1):
-				dwin += 1 
-			else:
-				dlose += 1
-		
-		lam_d[j] = (lam_d[j][0] + dwin, lam_d[j][1] + dlose)  # lam_d[j][0] = lam_d_given_W and lam_d[j][1] = lam_d_given_L
-	
+					lam_d[j] = (lam_d[j][0], lam_d[j][1] + 1)
+			elif(j >= 11):
+				if(winner == 1):
+					lam_d[11] = (lam_d[11][0] + 1, lam_d[11][1])
+				else:
+					lam_d[11] = (lam_d[11][0], lam_d[11][1] + 1)
 	return lam_d
 						
 # compute not frequency/likelihood of each sequence (p(f_i|W), p(f_i|L)) and descriptors (p(d_i|w), p(d_i|L))
@@ -169,6 +170,8 @@ def makeLams_d(seqs, descriptorss, dct_reverse, winMatrix, lDesc, winNum):
 						continue
 					else:
 						features.append(lams_d[j][0])
+				elif(j >= 11):
+					features.append(lams_d[11][0])
 				else:
 					features.append(lams_d[j][0])
 			
@@ -207,7 +210,7 @@ def makeLams_e(seqs, dct_reverse, winMatrix, winNum):
 		p_e_given_L = makeNormalizedLikelihood(lams_e[key][1] , lams_e[key][0])
 		lams_e[key] = (p_e_given_W , p_e_given_L)
 	
-	#print("Lams_e (prob): " + str(lams_e))
+	print("Lams_e (prob): " + str(lams_e))
 	
 	#you know which features have occured eg. {3,7,9}
 	normalizedLamList_e = [] 
@@ -298,7 +301,7 @@ def addEndGameVehicle(result, time, seq):
 			plt.plot(time[i+2], result[i+2], marker='o', color='cyan')
 			plt.vlines(x=time[i+2], ymin=result[i+2]-0.1, ymax= result[i+2]+0.1, color='blue', zorder=2)
 			plt.plot(np.arange(i+3), result[:i+3], linestyle='-', color = 'green', label='V wins')
-			plt.plot(np.arange(i+2,len(time)) , result[i+2:], linestyle=':', color = 'green', label='V wins')
+			plt.plot(np.arange(i+2,len(time)), result[i+2:], linestyle=':', color = 'green', label='V wins')
 			endgame = True
 		else:
 			continue
@@ -326,17 +329,17 @@ def histogram(seqs):
 		
 	plt.figure()
 	plt.hist(length)
-	plt.title("Sequence Length")
+	plt.title("Length of sequences")
 	plt.xlabel("Length")
 	plt.ylabel("Frequency")
 	fig = plt.gcf()
-
+	
 
 if __name__=="__main__":
 	dct_noneEvents = loadNoneEvents()
 
 	dir_data = os.environ['ITS_SEQMODEL_DATADIR']
-	lDesc = np.array(["from_Single", "From right", "Overcast", "Sunny", "Raining", "Group", "13-18y", "18-30y", "30-60y", "60+ years", "Distraction", "Female"])
+	lDesc = np.array(["from_Single", "From right", "Overcast", "Sunny", "Raining", "Group", "13-18y", "18-30y", "30-60y", "60+ years", "Distraction", "Female", "female"])
 	
 	(seqs,descriptorss, dct_reverse, time) = makeSeqs(dir_data, dct_noneEvents)
 
@@ -349,7 +352,7 @@ if __name__=="__main__":
 	normalizedLamList_e = makeLams_e(seqs, dct_reverse, winMatrix, 74.0)
 	
 	plt.figure()
-	for i in range(149, 150):
+	for i in range(140, 150):
 		result = makeTemporalPosteriorSequence( 74.0/204,  normalizedLamList_d[i],  normalizedLamList_e[i])
 		#plt.axvline(x=result.index(max(result)), color='k', linestyle='--')
 		if(len(normalizedLamList_e[i]) +2 >= 2):
@@ -358,8 +361,8 @@ if __name__=="__main__":
 				#plt.vlines(x=result.index(max(result))-0.75, ymin=0, ymax=max(result) + 0.1, color='black', linestyle=':', zorder=2)
 				
 			else:
-				plt.plot(np.arange(len(normalizedLamList_e[i]) +2), result, linestyle='-', color = 'blue', label='V wins')
-				#addEndGameVehicle(result, np.arange(len(normalizedLamList_e[i]) +2), seqs[i])
+				#plt.plot(np.arange(len(normalizedLamList_e[i]) +2), result, linestyle='-', color = 'blue', label='V wins')
+				addEndGameVehicle(result, np.arange(len(normalizedLamList_e[i]) +2), seqs[i])
 				
 				 
 		
@@ -374,8 +377,15 @@ if __name__=="__main__":
 	plt.show()
 	#plt.gca().legend(('P wins','V wins'))
 		
+	'''
 	histogram(seqs)
 	
+	plt.figure()
+	plt.hist(tDelta)
+	plt.title("Time of sequences")
+	plt.xlabel("Time (s)")
+	plt.ylabel("Frequency")
+	'''
 	'''	
 	feature = 48
 	win, lose, seqnum = checkFeatureFreq(feature, seqs, winMatrix)
