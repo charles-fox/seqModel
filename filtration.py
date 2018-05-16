@@ -11,6 +11,83 @@ from entropy import *
 import matplotlib.pyplot as plt
 import GPy, numpy as np
 
+		
+def compute_s_i_t(res_i, t, winner):
+	std_i = []
+	for i in range(0, t):
+		si = res_i[i] - winner
+		std_i.append(si**2)
+	print("\n Std_i: " + str(std_i))
+	return std_i
+	
+def compute_s_t(normlizedLamList_d, normalizedLamList_e, winMatrix):
+	std = []
+	
+	for i in range(0, 204):
+		result = makeTemporalPosteriorSequence( 74.0/204,  normalizedLamList_d[i],  normalizedLamList_e[i])
+		print("\n Len result: " + str(len(result)))
+		std_i = compute_s_i_t(result, len(result), winMatrix[i])
+		std.append(std_i)	
+	print("\n Std Length: " + str(len(std)))
+	std_average = [float(sum(col))/len(col) for col in zip(*std)]
+	#std_average = [x ** 0.5 for x in std_average]
+	print("\n Average Std square root: " + str(std_average))
+	
+	plt.figure()
+	plt.plot(np.arange(len(result)), std_average, linewidth=1.5)
+	plt.xlabel("Time (t)")
+	plt.ylabel("S_t")
+	plt.title("Residual filtration posterior volatility over time")
+	plt.xlim(0, len(result))
+	plt.ylim(0,0.25)
+	
+	
+
+def makeStopEvent(seqs, winMatrix):
+	pedWinEvents = [27, 10, 48, 61, 45, 16, 41, 40, 31]
+	carWinEvents = [9, 4, 12, 29, 8, 38, 19, 7, 21, 13]	
+	
+	for i in range(0, len(seqs)):
+		#print("i: " + str(i))
+		visit = False
+		
+		if (winMatrix[i] == 1):
+			for stop in pedWinEvents:
+				for j in range(0, len(seqs[i])):
+					#print("j: " + str(j))
+					if (seqs[i][j] == stop and visit == False):
+						#seqs[i].insert(j+1, 62)
+						tmp = []
+						for k in range(j, 26):
+							tmp.append(62)
+						seqs[i] = seqs[i][0:j+1] + tmp 
+						visit = True
+							
+		else:
+			for j in range(0, len(seqs[i])):
+				for stop in carWinEvents:
+					#print("j: " + str(j))
+					if ( seqs[i][j] == stop and visit == False):
+						tmp = []
+						for k in range(j, 26):
+							tmp.append(63)
+						seqs[i] = seqs[i][0:j+1] + tmp 
+						visit = True
+	
+	# hack for empty sequences
+	tmp = []
+	for k in range(0, 27):
+		tmp.append(63)	
+	seqs[67] = tmp	
+	
+	# hack for empty sequence
+	tmp = []
+	for k in range(0, 27):
+		tmp.append(62)	
+	seqs[198] = tmp
+
+							
+	return seqs
 
 # to deal with zeros for log funcion
 # add 1 to all the frequencies
@@ -130,6 +207,28 @@ def makeTemporalPosteriorSequence( pi_W,  lams_d,  lams_e):
 	print("Result: " + str(result))
 	return result
 
+def makeFiltrationPosteriorSequence(result):
+	
+	res = []    #to store results
+
+	t=0
+	p_W_at_t = result[0]   #posterior of W given all information available up to t
+	res.append(p_W_at_t)   #just the prior
+	
+	t=1
+	p_W_at_t = fuseProbs( p_W_at_t , result[1] )    #fuse in all descriptors
+		#p_W_at_t = (p_W_at_t + lams_d[i])/2 
+	res.append(p_W_at_t)                        #only store result once
+	
+	for t in range(2, 2+len(result)):   #for each event time
+		p_W_at_t = fuseProbs( p_W_at_t , result[t-2] )    #fuse in all descriptors
+		#p_W_at_t = (p_W_at_t + lams_e[t-2])/2 
+		res.append(p_W_at_t)                                      #here we store result at each time
+	
+	print("Res: " + str(res))
+	return res
+	
+
 def makeLams_d(seqs, descriptorss, dct_reverse, winMatrix, lDesc, winNum):
 	
 	#you know freq(d_i | W)  and freq(d_i|L)   -- these are just frequencies 
@@ -140,8 +239,7 @@ def makeLams_d(seqs, descriptorss, dct_reverse, winMatrix, lDesc, winNum):
 	#you compute (not normalized)  P(d_i | W)  and P(d_i|L) from the frequencies
 	# convert frequencies into probabilities
 	lams_d = dict()
-	#for key in freqs_d:    
-	#    lams_d[key] = tuple(t/(len(seqs)+2) for t in freqs_d[key])
+	
 	for key in freqs_d:
 		
 		lam_di_given_W = freqs_d[key][0]/(winNum)
@@ -176,9 +274,6 @@ def makeLams_d(seqs, descriptorss, dct_reverse, winMatrix, lDesc, winNum):
 					features.append(lams_d[j][0])
 			
 		normalizedLamList_d.append(features)
-		
-	#return  normalizedLamList[ 3,7,9] 
-	#print("NormalizedLamList_d: " + str(normalizedLamList_d))
 	
 	return normalizedLamList_d
 
@@ -194,8 +289,6 @@ def makeLams_e(seqs, dct_reverse, winMatrix, winNum):
 	#you compute (not normalized)  P(d_i | W)  and P(d_i|L) from the frequencies
 	# convert frequencies into probabilities
 	lams_e = dict()
-	#for key in freqs_e:    
-	 #   lams_e[key] = tuple(t/(len(seqs)+2) for t in freqs_e[key])
 	
 	for key in freqs_e:
 		lam_e_given_W = freqs_e[key][0]/(winNum)
@@ -204,8 +297,6 @@ def makeLams_e(seqs, dct_reverse, winMatrix, winNum):
 
 	#normlize each one:   makeNormalizedLikelihood( p_di_given_W , p_di_given_L):
 	for key in lams_e:
-		if(key == 48):
-			print("Hello\n") 
 		p_e_given_W = makeNormalizedLikelihood(lams_e[key][0] , lams_e[key][1])
 		p_e_given_L = makeNormalizedLikelihood(lams_e[key][1] , lams_e[key][0])
 		lams_e[key] = (p_e_given_W , p_e_given_L)
@@ -222,9 +313,6 @@ def makeLams_e(seqs, dct_reverse, winMatrix, winNum):
 			features.append(lams_e[label][0])
 		
 		normalizedLamList_e.append(features)
-		
-	#return  normalizedLamList[ 3,7,9] 
-	#print("NormalizedLamList_e: " + str(normalizedLamList_e))
 	
 	return normalizedLamList_e
 
@@ -241,44 +329,11 @@ def checkFeatureFreq(feature, seqs, winMatrix):
 			else:
 				lose += 1
 			seqnum.append(i)
-					
 	return win, lose, seqnum
 
-#compute the average of filtered sequences
-#def average(results):
-	
-def plotResult(result, time):
-	
-	x_obs = time
-	true_model = result	
-	
-	noise = np.random.normal(0, 1, x_obs.shape)
-	y_obs = np.polyval(true_model, x_obs) + noise
-	
-	# Fit to a 5-th order polynomial
-	fit_model = np.polyfit(x_obs, y_obs, 11)
-	
-	x = np.linspace(0, 30, 10)
-	y_true = np.polyval(true_model, x)
-	y_pred = np.polyval(fit_model, x)
-	
-	# Made up confidence intervals (I'm too lazy to do the math...)
-	high_bound = y_pred + 0.1 * (0.1 * x**4 + 0.1)
-	low_bound = y_pred - 0.1 * (0.1 * x**4 + 0.1)
-	
-	# Plot the results...
-	fig, ax = plt.subplots()
-	ax.fill_between(x, high_bound, low_bound, color='gray', alpha=0.5)
-	ax.plot(x_obs, y_obs, 'ko', label='Observed Values')
-	ax.plot(x, y_pred, 'k--', label='Predicted Model')
-	ax.plot(x, y_true, 'r-', label='True Model')
-	ax.legend(loc='upper left')
-	plt.show()
-
+# gaussian process for an interaction
 def gpyplot(result, time):
-	
-	
-	#generate some test data
+
 	X = np.vstack(time)
 	Y = np.vstack(result)
 	#fit and display a Gaussian process
@@ -286,43 +341,28 @@ def gpyplot(result, time):
 	m= GPy.models.GPRegression(X,Y,kernel)
 	m.optimize(messages=True,max_f_eval = 1000)
 	m.plot()
+	array = np.arange(len(time))
+	array = array[:, None]
+	mean_std = m.predict(array)
+	print("\n mean_std: " + str(mean_std))
 	plt.xlim(0, 20)
 	plt.ylim(0,1)
 	
-	plt.title("P(W|D(0:t)) over time")
+	plt.title("GP P(W|D(0:t)) over time")
 	plt.xlabel("Time")
 	plt.ylabel("P(W|D(0:t))")
 	plt.show()
-
-def addEndGameVehicle(result, time, seq):
-	endgame = False
-	for i in range(0, len(seq)):
-		if(endgame == False and (seq[i] == 9 or seq[i] == 13 or seq[i] == 21 or seq[i] == 25 or seq[i] == 19 or seq[i] == 29 or seq[i]== 32 or seq[i] == 38 or seq[i] == 24)):
-			plt.plot(time[i+2], result[i+2], marker='o', color='cyan')
-			plt.vlines(x=time[i+2], ymin=result[i+2]-0.1, ymax= result[i+2]+0.1, color='blue', zorder=2)
-			plt.plot(np.arange(i+3), result[:i+3], linestyle='-', color = 'green', label='V wins')
-			plt.plot(np.arange(i+2,len(time)), result[i+2:], linestyle=':', color = 'green', label='V wins')
-			endgame = True
-		else:
-			continue
 	
-	
-def addEndGamePedestrian(result, time, seq):
-	endgame = False
-	for i in range(0, len(seq)):
-		if(endgame == False):
-			if(seq[i] == 27 or seq[i] == 31 or seq[i] == 41 or seq[i] == 48 or seq[i] == 61 or seq[i] == 45 or seq[i] == 26 or result[i] > 0.6):
-				plt.plot(time[i+2], result[i+2], marker='o', color='red')
-				plt.vlines(x=time[i+2], ymin=result[i+2]-0.1, ymax= result[i+2]+0.1, color='purple', zorder=2)
-				plt.plot(np.arange(i+3), result[:i+3], linestyle='-', color = 'red', label='P wins')
-				#plt.plot(np.arange(i+2,len(time)) , result[i+2:], linestyle=':', color = 'red', label='P wins')
-				#plt.plot([i+2, i+5], [result[i+2], 0.5], marker='o')
-				plt.plot(np.arange(i+2,len(time)) , result[i+2:] , linestyle=':', color = 'red', label='P wins')
-				endgame = True
-		else:
-			continue
+	return mean_std
 
-def histogram(seqs):
+def plotVehicleWins(result, time):
+	plt.plot(time, result, linestyle = '-', color='purple')	
+
+	
+def plotPedestrianWins(result, time):
+	plt.plot(time, result, linestyle = '-', color='lightgreen')
+
+def hist_seq(seqs):
 	length = []
 	for i in range(0, len(seqs)):
 		length.append(len(seqs[i]))
@@ -334,6 +374,33 @@ def histogram(seqs):
 	plt.ylabel("Frequency")
 	fig = plt.gcf()
 	
+def hist_time(tDelta):
+	plt.figure()
+	plt.hist(tDelta)
+	plt.title("Duration of interactions")
+	plt.xlabel("Time (s)")
+	plt.ylabel("Frequency")
+	
+def getMeanStdforAll(start, end, normalizedLamList_d, normalizedLamList_e):
+	
+	mean = []
+	std = []
+	for i in range(start, end):
+		#if(len(normalizedLamList_e[i]) == 10):
+		result = makeTemporalPosteriorSequence( 74.0/204,  normalizedLamList_d[i],  normalizedLamList_e[i])
+		m = gpyplot(result, np.arange(len(normalizedLamList_e[i]) +2))
+		print("\n Mean and std : " + str(m))
+		mean.append(m[0])	
+		std.append(m[1])
+		
+	#std_average = np.array(std).mean()
+	#print("std_average: " + str(std_average))
+	#plt.figure()
+	#plt.plot(np.arange(len(std)), std_average)
+
+	return mean, std
+		
+
 
 if __name__=="__main__":
 	dct_noneEvents = loadNoneEvents()
@@ -342,52 +409,64 @@ if __name__=="__main__":
 	lDesc = np.array(["from_Single", "From right", "Overcast", "Sunny", "Raining", "Group", "13-18y", "18-30y", "30-60y", "60+ years", "Distraction", "Female", "female"])
 	
 	(seqs,descriptorss, dct_reverse, time) = makeSeqs(dir_data, dct_noneEvents)
+	
+	dct_reverse[62] = 'Ped wins'
+	dct_reverse[63] = 'Car wins'
 
 	winMatrix = winnerMatrix(204)	
 	
 	time = np.reshape(time, (203, 2))
 	seqtime, tDelta = duration(time)
-		
+	
+	
+	seqs = makeStopEvent(seqs, winMatrix)  # add stop event to seqs and normalize all sequences' length to 26
+	#print(seqs)
+	
 	normalizedLamList_d = makeLams_d(seqs, descriptorss, dct_reverse, winMatrix, lDesc, 74.0)
 	normalizedLamList_e = makeLams_e(seqs, dct_reverse, winMatrix, 74.0)
 	
-	plt.figure()
-	for i in range(140, 150):
-		result = makeTemporalPosteriorSequence( 74.0/204,  normalizedLamList_d[i],  normalizedLamList_e[i])
-		#plt.axvline(x=result.index(max(result)), color='k', linestyle='--')
-		if(len(normalizedLamList_e[i]) +2 >= 2):
-			if(winMatrix[i] == 1):
-				addEndGamePedestrian(result, np.arange(len(normalizedLamList_e[i]) +2), seqs[i])
-				#plt.vlines(x=result.index(max(result))-0.75, ymin=0, ymax=max(result) + 0.1, color='black', linestyle=':', zorder=2)
-				
-			else:
-				#plt.plot(np.arange(len(normalizedLamList_e[i]) +2), result, linestyle='-', color = 'blue', label='V wins')
-				addEndGameVehicle(result, np.arange(len(normalizedLamList_e[i]) +2), seqs[i])
-				
-				 
-		
-		#plotResult(result, np.arange(len(normalizedLamList_e[i]) +2))
-		#gpyplot(result, np.arange(len(normalizedLamList_e[i]) +2))		
-		plt.xlim(0,30)
-		plt.ylim(0,1)
+	print("\n Compute Std0: ")
+	compute_s_t(normalizedLamList_d, normalizedLamList_e, winMatrix)
 	
-	plt.title("Filtered sequence of P-V interaction" )#+ str(i))
+	
+	plt.figure()
+	for i in range(0,204):
+		result = makeTemporalPosteriorSequence( 74.0/204,  normalizedLamList_d[i],  normalizedLamList_e[i])
+		#if(len(normalizedLamList_e[i]) +2 == 10):
+		if(winMatrix[i] == 1):
+			plotPedestrianWins(result, np.arange(len(normalizedLamList_e[i]) +2))
+			#plt.vlines(x=result.index(max(result))-0.75, ymin=0, ymax=max(result) + 0.1, color='black', linestyle=':', zorder=2)
+		else:
+			#plt.plot(np.arange(len(normalizedLamList_e[i]) +2), result, linestyle='-', color = 'blue', label='V wins')
+			plotVehicleWins(result, np.arange(len(normalizedLamList_e[i]) +2))
+	
+		 
+	#gpyplot(result,  np.arange(len(normalizedLamList_e[i]) +2))
+		
+	plt.xlim(0,30)
+	plt.ylim(0,1)
+
+	plt.title("Filtered sequence of P-V interaction with stop events" )#+ str(i))
 	plt.xlabel("Time (t)")
 	plt.ylabel("P(W|D(0:t))")
 	plt.show()
-	#plt.gca().legend(('P wins','V wins'))
+
+	#hist_seq(seqs)
+	
+	#hist_time(tDelta)
+	
+	'''
+	means, stds = getMeanStdforAll(149, 150, normalizedLamList_d, normalizedLamList_e)
+	print("\n stds: " + str(stds))
+	stds_average = [float(sum(col))/len(col) for col in zip(*stds)]
+	print("Average std: " + str(stds_average))
+	#plt.figure()
+	#plt.plot(np.arange(12), stds_average)
+
+	'''
 		
 	'''
-	histogram(seqs)
-	
-	plt.figure()
-	plt.hist(tDelta)
-	plt.title("Time of sequences")
-	plt.xlabel("Time (s)")
-	plt.ylabel("Frequency")
-	'''
-	'''	
-	feature = 48
+	feature = 27
 	win, lose, seqnum = checkFeatureFreq(feature, seqs, winMatrix)
 	print("Feature " + str(feature) + " wins: " + str(win))
 	print("Feature " + str(feature) + " loses: " + str(lose))
